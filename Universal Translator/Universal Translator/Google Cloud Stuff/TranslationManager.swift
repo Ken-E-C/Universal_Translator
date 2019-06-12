@@ -49,7 +49,7 @@ class TranslationManager: NSObject {
     
     static let sharedInstance = TranslationManager()
     
-    private let apiKey = "AIzaSyCDb6N1-GT4UZFimut351Ct3u3-ss83fVY"
+    private let apiKey = googleCloudAPIKey
     
     var supportedLanguages = [TranslationLanguage]()
     

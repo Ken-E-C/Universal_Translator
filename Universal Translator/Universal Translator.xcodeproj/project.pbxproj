@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6371A629725FF40FF2E71F83 /* Pods_Universal_Translator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 922945BBDB5B293BE76920F4 /* Pods_Universal_Translator.framework */; };
+		882AD5A222B093B200B9BE35 /* APIKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882AD5A122B093B200B9BE35 /* APIKeys.swift */; };
 		88C2A47522B0715E00B30D70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2A47422B0715E00B30D70 /* AppDelegate.swift */; };
 		88C2A47722B0715E00B30D70 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2A47622B0715E00B30D70 /* ViewController.swift */; };
 		88C2A47A22B0715E00B30D70 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 88C2A47822B0715E00B30D70 /* Main.storyboard */; };
@@ -19,6 +20,7 @@
 
 /* Begin PBXFileReference section */
 		6487EA4D62CC08CC357A5A9B /* Pods-Universal Translator.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Universal Translator.release.xcconfig"; path = "Target Support Files/Pods-Universal Translator/Pods-Universal Translator.release.xcconfig"; sourceTree = "<group>"; };
+		882AD5A122B093B200B9BE35 /* APIKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeys.swift; sourceTree = "<group>"; };
 		88C2A47122B0715E00B30D70 /* Universal Translator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Universal Translator.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		88C2A47422B0715E00B30D70 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		88C2A47622B0715E00B30D70 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				88C2A48A22B0738100B30D70 /* TranslationManager.swift */,
+				882AD5A122B093B200B9BE35 /* APIKeys.swift */,
 			);
 			path = "Google Cloud Stuff";
 			sourceTree = "<group>";
@@ -218,6 +221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				88C2A47722B0715E00B30D70 /* ViewController.swift in Sources */,
+				882AD5A222B093B200B9BE35 /* APIKeys.swift in Sources */,
 				88C2A48B22B0738100B30D70 /* TranslationManager.swift in Sources */,
 				88C2A47522B0715E00B30D70 /* AppDelegate.swift in Sources */,
 				88C2A47D22B0715E00B30D70 /* Universal_Translator.xcdatamodeld in Sources */,
