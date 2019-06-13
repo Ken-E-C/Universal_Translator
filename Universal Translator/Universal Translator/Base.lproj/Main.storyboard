@@ -86,6 +86,9 @@
                                         <nil key="textColor"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
+                                        <connections>
+                                            <action selector="localLanguageEntered:" destination="BYZ-38-t0r" eventType="editingDidEnd" id="QnK-Mo-jFa"/>
+                                        </connections>
                                     </textField>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -185,6 +188,9 @@
                                         <nil key="textColor"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
+                                        <connections>
+                                            <action selector="targetLanguageEntered:" destination="BYZ-38-t0r" eventType="editingDidEnd" id="A1z-MZ-SrZ"/>
+                                        </connections>
                                     </textField>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -228,6 +234,7 @@
                         <outlet property="detectLanguageEnableSwitch" destination="KeI-Il-VU1" id="a95-vM-1co"/>
                         <outlet property="localLanguageTextField" destination="m7o-Lg-uww" id="Ltc-lJ-wWa"/>
                         <outlet property="startTranslationStatusButton" destination="6nf-Xp-88l" id="hb8-pv-qic"/>
+                        <outlet property="targetLanguageTextField" destination="7Fr-9a-8lT" id="gNV-jf-M5r"/>
                         <outlet property="translatedTextView" destination="iwe-tN-Wk7" id="VjC-XI-1Xu"/>
                     </connections>
                 </viewController>

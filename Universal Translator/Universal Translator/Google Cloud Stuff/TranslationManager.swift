@@ -46,6 +46,10 @@ struct TranslationLanguage {
     var code: String?
     var name: String?
 }
+//fake error for testing certain parts of the app
+enum TestError: Error {
+    case test(String)
+}
 
 class TranslationManager: NSObject {
     
@@ -55,9 +59,9 @@ class TranslationManager: NSObject {
     
     var supportedLanguages = [TranslationLanguage]()
     
+    var sourceLanguageCode: String?
     var textToTranslate: String?
-    
-    var targetLanguageCode: String?
+    var targetLanguageCode: String = Locale.current.languageCode ?? "en"
     
     private func makeRequest(usingTranslationAPI api: TranslationAPI, urlParams: [String: String], completion: @escaping (_ results: Data?) -> Void) {
         
@@ -109,6 +113,7 @@ class TranslationManager: NSObject {
                 let data = try JSON(data: results)
                 
                 if let language = data["data"]["detections"][0][0]["language"].string {
+                    self.sourceLanguageCode = language
                     completion(language)
                 }
                 else {
@@ -131,6 +136,8 @@ class TranslationManager: NSObject {
             guard let results = results else { completion(false); return }
             
             do {
+                //DEBUG: used to simulate a failure in retrieving languages
+                //throw TestError.test("Not a real error")
                 let data = try JSON(data: results)
                 
                 let supportedLanguagesArray = data["data"]["languages"]
@@ -148,9 +155,41 @@ class TranslationManager: NSObject {
                 print("error fetching supported languages")
             }
         }
-        
     }
+    
+    func translate(completion: @escaping (_ translations: String?) -> Void) {
+        guard let textToTranslate = textToTranslate else { completion(nil); return }
+        let targetLanguage = targetLanguageCode
         
+        var urlParams = [String: String]()
+        urlParams["key"] = apiKey
+        urlParams["q"] = textToTranslate
+        urlParams["target"] = targetLanguage
+        urlParams["format"] = "text"
+        
+        if let verifiedSourceLanguageCode = sourceLanguageCode {
+            urlParams["source"] = verifiedSourceLanguageCode
+            makeRequest(usingTranslationAPI: .translate, urlParams: urlParams) { (results) in
+                guard let results = results else { completion(nil); return }
+                do {
+                    let data = try JSON(data: results)
+                    
+                    var allTranslations = [String]()
+                    
+                    for index in 0...data["data"]["translations"].count {
+                        if let translatedText = data["data"]["translations"][index]["translatedText"].string {
+                            allTranslations.append(translatedText)
+                        }
+                    }
+                    let translatedExpression = allTranslations.count > 0 ? allTranslations[0] : nil
+                    completion(translatedExpression)
+                }
+                catch {
+                    print("\n Error with translation: \(error) \n")
+                }
+            }
+        }
+    }
 }
 
 
