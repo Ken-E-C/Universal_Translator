@@ -9,6 +9,8 @@
 import Foundation
 import SwiftyJSON
 
+
+
 enum TranslationAPI {
     case detectLanguage
     case translate
@@ -53,12 +55,18 @@ class TranslationManager: NSObject {
     
     var supportedLanguages = [TranslationLanguage]()
     
+    var textToTranslate: String?
+    
+    var targetLanguageCode: String?
+    
     private func makeRequest(usingTranslationAPI api: TranslationAPI, urlParams: [String: String], completion: @escaping (_ results: Data?) -> Void) {
         
         if var components = URLComponents(string: api.getURL()) {
+            var newQueryItems = [URLQueryItem]()
             for (key,value) in urlParams {
-                components.queryItems?.append(URLQueryItem(name: key, value: value))
+                newQueryItems.append(URLQueryItem(name: key, value: value))
             }
+            components.queryItems = newQueryItems
             if let url = components.url {
                 var request = URLRequest(url: url)
                 request.httpMethod = api.getHTTPMethod()
@@ -73,17 +81,19 @@ class TranslationManager: NSObject {
                     else {
                         if let response = response as? HTTPURLResponse {
                             if response.statusCode == 200 || response.statusCode == 201 {
-
-                            if let verifiedResults = results{
-                                completion(verifiedResults)
+                                if let verifiedResults = results{
+                                    completion(verifiedResults)
+                                }
+                                else {
+                                    completion(nil)
+                                }
                             }
                             else {
-                                completion(nil)
+                                print("Response code was \(response.statusCode) ")
                             }
                         }
                     }
                 }
-            }
             task.resume()
             }
         }
@@ -98,7 +108,7 @@ class TranslationManager: NSObject {
             do {
                 let data = try JSON(data: results)
                 
-                if let language = data["data"]["detections"][0]["language"].string {
+                if let language = data["data"]["detections"][0][0]["language"].string {
                     completion(language)
                 }
                 else {
@@ -109,36 +119,35 @@ class TranslationManager: NSObject {
                 print("error with parsing data to JSON file format \(error)")
             }
         }
-        
-            
-            
-                
-            
-            
-            
-//            if let data = results["data"] as? [String: Any], let detections = data["detections"] as? [[[String: Any]]]{
-//                var detectedLanguages = [String]()
-//
-//                for detection in detections {
-//                    for currentDetection in detection{
-//                        if let language = currentDetection["language"] as? String {
-//                            detectedLanguages.append(language)
-//                        }
-//                    }
-//                }
-//
-//                if detectedLanguages.count > 0 {
-//                    completion(detectedLanguages[0])
-//                }
-//                else {
-//                    completion(nil)
-//                }
-//            }
-//        }
     }
     
     
     func fetchSupportedLanguages(completion: @escaping (_ success: Bool) -> Void) {
+        var urlParams = [String: String]()
+        urlParams["key"] = apiKey
+        urlParams["target"] = Locale.current.languageCode ?? "en"
+        
+        makeRequest(usingTranslationAPI: .supportedLanguages, urlParams: urlParams) { (results) in
+            guard let results = results else { completion(false); return }
+            
+            do {
+                let data = try JSON(data: results)
+                
+                let supportedLanguagesArray = data["data"]["languages"]
+                
+                for index in 0...supportedLanguagesArray.count {
+                    var newLanguageEntry = TranslationLanguage()
+                    newLanguageEntry.code = supportedLanguagesArray[index]["language"].string
+                    newLanguageEntry.name = supportedLanguagesArray[index]["name"].string
+                    
+                    self.supportedLanguages.append(newLanguageEntry)
+                }
+                completion(true)
+            } catch {
+                completion(false)
+                print("error fetching supported languages")
+            }
+        }
         
     }
         
