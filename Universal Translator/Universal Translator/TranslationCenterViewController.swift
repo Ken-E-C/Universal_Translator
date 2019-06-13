@@ -7,6 +7,8 @@
 //
 import Foundation
 import UIKit
+import SwiftSpinner
+
 
 class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
 
@@ -49,28 +51,42 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
         switch textView {
         case capturedTextView:
-            let alert = UIAlertController(title: "Translation in Progress", message: "", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default action"), style: .default, handler: { _ in
-                NSLog("The \"OK\" alert occured.")
-            }))
-            self.present(alert, animated: true, completion: nil)
+//            let alert = UIAlertController(title: "Translation in Progress", message: "", preferredStyle: .alert)
+//            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default action"), style: .default, handler: { _ in
+//                NSLog("The \"OK\" alert occured.")
+//            }))
+            SwiftSpinner.show("Starting Translation")
+            //self.present(alert, animated: true, completion: nil)
+            
+            
+            
+            
             //detects the source Language
             if detectLanguageEnableSwitch.isOn {
+                DispatchQueue.main.async {
+                    SwiftSpinner.sharedInstance.title = "Detecting Language"
+                }
+                
                 TranslationManager.sharedInstance.detectLanguage(forText: capturedTextView.text) { (language) in
                     
                     
-                    if alert.isFirstResponder {
-                        alert.dismiss(animated: true, completion: nil)
-                    }
+//                    if alert.isFirstResponder {
+//                        alert.dismiss(animated: true, completion: nil)
+//                    }
                     
                     TranslationManager.sharedInstance.sourceLanguageCode = language
                     DispatchQueue.main.async {
                         self.localLanguageTextField.text = language
+                        SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
                     }
                     self.startTranslation(capturedText: capturedText)
                     
                 }
             } else {
+                DispatchQueue.main.async {
+                    SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
+                }
+                
                 startTranslation(capturedText: capturedText)
             }
             
@@ -86,7 +102,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             
             DispatchQueue.main.async {
                 self.translatedTextView.text = verifiedTranslatedText
+                SwiftSpinner.show(duration: 0.7, title: "Translation Successful")
             }
+            
             
         }
     }
