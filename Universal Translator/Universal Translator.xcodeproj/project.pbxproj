@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		6371A629725FF40FF2E71F83 /* Pods_Universal_Translator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 922945BBDB5B293BE76920F4 /* Pods_Universal_Translator.framework */; };
 		882AD5A222B093B200B9BE35 /* APIKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882AD5A122B093B200B9BE35 /* APIKeys.swift */; };
+		886A289522B4613000EEF059 /* language-tags.json in Resources */ = {isa = PBXBuildFile; fileRef = 886A289422B4613000EEF059 /* language-tags.json */; };
 		88C2A47522B0715E00B30D70 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2A47422B0715E00B30D70 /* AppDelegate.swift */; };
 		88C2A47722B0715E00B30D70 /* TranslationCenterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2A47622B0715E00B30D70 /* TranslationCenterViewController.swift */; };
 		88C2A47A22B0715E00B30D70 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 88C2A47822B0715E00B30D70 /* Main.storyboard */; };
@@ -16,11 +17,14 @@
 		88C2A47F22B0716000B30D70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 88C2A47E22B0716000B30D70 /* Assets.xcassets */; };
 		88C2A48222B0716000B30D70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 88C2A48022B0716000B30D70 /* LaunchScreen.storyboard */; };
 		88C2A48B22B0738100B30D70 /* TranslationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2A48A22B0738100B30D70 /* TranslationManager.swift */; };
+		88D66B4622B4632100E95FE5 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D66B4522B4632100E95FE5 /* LanguageManager.swift */; };
+		88D66B4822B485D600E95FE5 /* LanguageParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D66B4722B485D600E95FE5 /* LanguageParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		6487EA4D62CC08CC357A5A9B /* Pods-Universal Translator.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Universal Translator.release.xcconfig"; path = "Target Support Files/Pods-Universal Translator/Pods-Universal Translator.release.xcconfig"; sourceTree = "<group>"; };
 		882AD5A122B093B200B9BE35 /* APIKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeys.swift; sourceTree = "<group>"; };
+		886A289422B4613000EEF059 /* language-tags.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "language-tags.json"; path = "Universal Translator/Model/language-tags.json"; sourceTree = SOURCE_ROOT; };
 		88C2A47122B0715E00B30D70 /* Universal Translator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Universal Translator.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		88C2A47422B0715E00B30D70 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		88C2A47622B0715E00B30D70 /* TranslationCenterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationCenterViewController.swift; sourceTree = "<group>"; };
@@ -30,6 +34,8 @@
 		88C2A48122B0716000B30D70 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		88C2A48322B0716000B30D70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		88C2A48A22B0738100B30D70 /* TranslationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationManager.swift; sourceTree = "<group>"; };
+		88D66B4522B4632100E95FE5 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		88D66B4722B485D600E95FE5 /* LanguageParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageParser.swift; sourceTree = "<group>"; };
 		922945BBDB5B293BE76920F4 /* Pods_Universal_Translator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Universal_Translator.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A05472D7518AA474CB8C973E /* Pods-Universal Translator.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Universal Translator.debug.xcconfig"; path = "Target Support Files/Pods-Universal Translator/Pods-Universal Translator.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -55,6 +61,16 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		886A289822B4617600EEF059 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				88C2A47B22B0715E00B30D70 /* Universal_Translator.xcdatamodeld */,
+				886A289422B4613000EEF059 /* language-tags.json */,
+				88D66B4722B485D600E95FE5 /* LanguageParser.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		88C2A46822B0715E00B30D70 = {
 			isa = PBXGroup;
 			children = (
@@ -76,14 +92,13 @@
 		88C2A47322B0715E00B30D70 /* Universal Translator */ = {
 			isa = PBXGroup;
 			children = (
+				88D66B4422B4629400E95FE5 /* Controller */,
+				88D66B4322B4628600E95FE5 /* View */,
+				886A289822B4617600EEF059 /* Model */,
 				88C2A48922B0736100B30D70 /* Google Cloud Stuff */,
 				88C2A47422B0715E00B30D70 /* AppDelegate.swift */,
-				88C2A47622B0715E00B30D70 /* TranslationCenterViewController.swift */,
-				88C2A47822B0715E00B30D70 /* Main.storyboard */,
 				88C2A47E22B0716000B30D70 /* Assets.xcassets */,
-				88C2A48022B0716000B30D70 /* LaunchScreen.storyboard */,
 				88C2A48322B0716000B30D70 /* Info.plist */,
-				88C2A47B22B0715E00B30D70 /* Universal_Translator.xcdatamodeld */,
 			);
 			path = "Universal Translator";
 			sourceTree = "<group>";
@@ -95,6 +110,24 @@
 				882AD5A122B093B200B9BE35 /* APIKeys.swift */,
 			);
 			path = "Google Cloud Stuff";
+			sourceTree = "<group>";
+		};
+		88D66B4322B4628600E95FE5 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				88C2A47822B0715E00B30D70 /* Main.storyboard */,
+				88C2A48022B0716000B30D70 /* LaunchScreen.storyboard */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		88D66B4422B4629400E95FE5 /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				88C2A47622B0715E00B30D70 /* TranslationCenterViewController.swift */,
+				88D66B4522B4632100E95FE5 /* LanguageManager.swift */,
+			);
+			path = Controller;
 			sourceTree = "<group>";
 		};
 		93D0329A67420B2CD489B807 /* Frameworks */ = {
@@ -165,6 +198,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				886A289522B4613000EEF059 /* language-tags.json in Resources */,
 				88C2A48222B0716000B30D70 /* LaunchScreen.storyboard in Resources */,
 				88C2A47F22B0716000B30D70 /* Assets.xcassets in Resources */,
 				88C2A47A22B0715E00B30D70 /* Main.storyboard in Resources */,
@@ -220,9 +254,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				88D66B4822B485D600E95FE5 /* LanguageParser.swift in Sources */,
 				88C2A47722B0715E00B30D70 /* TranslationCenterViewController.swift in Sources */,
 				882AD5A222B093B200B9BE35 /* APIKeys.swift in Sources */,
 				88C2A48B22B0738100B30D70 /* TranslationManager.swift in Sources */,
+				88D66B4622B4632100E95FE5 /* LanguageManager.swift in Sources */,
 				88C2A47522B0715E00B30D70 /* AppDelegate.swift in Sources */,
 				88C2A47D22B0715E00B30D70 /* Universal_Translator.xcdatamodeld in Sources */,
 			);
