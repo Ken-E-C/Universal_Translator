@@ -10,9 +10,10 @@ import Foundation
 import UIKit
 import CoreLocation
 
-struct ietfLanguageTag {
+struct bcp47LanguageTag {
     var languageTag: String?
     var countryTag: String?
+    var bcp47Tag: String?
 }
 
 
@@ -20,7 +21,7 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     static let sharedInstance = LanguageManager()
     
     var locationMgr = CLLocationManager()
-    var detectedLangTag = ietfLanguageTag()
+    var detectedLangTags = [bcp47LanguageTag]()
     
     override init() {
         super.init()
@@ -56,13 +57,13 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         //then reverse geocode location to get country code
         let geocoder = CLGeocoder()
-        let ietfParser = LanguageParser()
         if let currentLocation = locations.last{
+            //go find the language code
+            locationMgr.stopUpdatingLocation()
             geocoder.reverseGeocodeLocation(currentLocation) { (results, error) in
-                let countryCode = results?.first?.isoCountryCode
-                
-                //go find the language code
-                
+                if let countryCode = results?.first?.isoCountryCode {
+                    self.detectedLangTags = LanguageParser().findSupportedLocalLanguages(countryCode: countryCode)
+                }
             }
         }
     }
