@@ -16,12 +16,17 @@ struct bcp47LanguageTag {
     var bcp47Tag: String?
 }
 
+protocol LanguageManagerProtocol {
+    func languageTagsUpdated()
+}
 
 class LanguageManager: NSObject, CLLocationManagerDelegate {
     static let sharedInstance = LanguageManager()
     
     var locationMgr = CLLocationManager()
     var detectedLangTags = [bcp47LanguageTag]()
+    var TCViewController: TranslationCenterViewController?
+    
     
     override init() {
         super.init()
@@ -47,11 +52,13 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     }
     
     func inferLanguage(){
-        
-        
-        checkPermissions()
+        _ = checkPermissions()
         //then obtain location
         locationMgr.startUpdatingLocation()
+    }
+    
+    func updateDetectedLanguages(languageCode: String){
+        detectedLangTags = LanguageParser.sharedInstance.findRegionalDialects(detectedLanguage: languageCode)
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -62,7 +69,9 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
             locationMgr.stopUpdatingLocation()
             geocoder.reverseGeocodeLocation(currentLocation) { (results, error) in
                 if let countryCode = results?.first?.isoCountryCode {
-                    self.detectedLangTags = LanguageParser().findSupportedLocalLanguages(countryCode: countryCode)
+                    self.detectedLangTags = LanguageParser.sharedInstance.findSupportedLocalLanguages(countryCode: countryCode)
+                    
+                    self.TCViewController?.languageTagsUpdated()
                 }
             }
         }

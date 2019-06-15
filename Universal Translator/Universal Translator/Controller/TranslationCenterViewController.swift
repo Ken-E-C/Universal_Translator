@@ -10,7 +10,7 @@ import UIKit
 import SwiftSpinner
 
 
-class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
+class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate, LanguageManagerProtocol {
 
     @IBOutlet weak var capturedTextView: UITextView!
     @IBOutlet weak var detectLanguageEnableSwitch: UISwitch!
@@ -39,7 +39,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
         view.addGestureRecognizer(tap)
-        
+        LanguageManager.sharedInstance.TCViewController = self
         if TranslationManager.sharedInstance.supportedLanguages.isEmpty {
             fetchSupportedLanguagesList()
         }
@@ -73,8 +73,10 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                 TranslationManager.sharedInstance.detectLanguage(forText: capturedTextView.text) { (language) in
                     
                     TranslationManager.sharedInstance.sourceLanguageCode = language
+                    LanguageManager.sharedInstance.updateDetectedLanguages(languageCode: language ?? "")
                     DispatchQueue.main.async {
                         self.localLanguageTextField.text = language
+                        
                         SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
                     }
                     self.startTranslation(capturedText: capturedText)
@@ -125,6 +127,26 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                 }))
                 self.present(languageNotFetchedAlert, animated: true, completion: nil)
             }
+        }
+    }
+    
+    func languageTagsUpdated() {
+        if !LanguageManager.sharedInstance.detectedLangTags.isEmpty {
+            //display error message if a language could not be inferred
+            let languageNotinferredAlert = UIAlertController(title: "Error Inferring Languages", message: "There was an error with inferring the language using your location. What would you like to do?", preferredStyle: .alert)
+            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Detect Language using audio", comment: "Default action"), style: .default, handler: { _ in
+                //setup detect language using audio feed
+                self.capturedTextView.becomeFirstResponder()
+                NSLog("The \"Detect Language audio\" alert occured.")
+            }))
+            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Detect Language by entering text", comment: "Default action"), style: .default, handler: { _ in
+                self.capturedTextView.becomeFirstResponder()
+                NSLog("The \"Detect Language text\" alert occured.")
+            }))
+            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Ignore and continue", comment: "Default action"), style: .default, handler: { _ in
+                NSLog("The \"Ignore and continue\" alert occured.")
+            }))
+            present(languageNotinferredAlert, animated: true)
         }
     }
  

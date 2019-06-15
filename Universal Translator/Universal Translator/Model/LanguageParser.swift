@@ -10,6 +10,7 @@ import Foundation
 import SwiftyJSON
 class LanguageParser {
     
+    static let sharedInstance = LanguageParser()
     var languageTags: JSON?
     
     init() {
@@ -52,5 +53,35 @@ class LanguageParser {
         }
         return supportedLanguageTags
     }
+    
+    func findRegionalDialects(detectedLanguage: String) -> [bcp47LanguageTag] {
+        guard let verifiedLanguageTags = languageTags else {
+            fatalError("Error parsing JSON file ")
+        }
+        
+        var supportedLanguageTags = [bcp47LanguageTag]()
+        for index in 0...(verifiedLanguageTags.count - 1){
+            
+            let languageTag = verifiedLanguageTags[index]
+            guard let bcp47languageCode = languageTag["languageCode"].string else {
+                fatalError("error parsing language code")
+            }
+            
+            //cantonese has a 3 letter language code for some reason so adding an exception here
+            if bcp47languageCode.contains("\(detectedLanguage)"){
+                //build a language tag
+                var newTag = bcp47LanguageTag()
+                newTag.countryTag =  String(bcp47languageCode.suffix(2))
+                newTag.bcp47Tag = bcp47languageCode
+                //added in exception for Hong Kong Cantonese
+                newTag.languageTag = bcp47languageCode == "yue-Hant-HK" ? String(bcp47languageCode.prefix(3)): String(bcp47languageCode.prefix(2))
+                
+                supportedLanguageTags.append(newTag)
+            }
+        }
+        return supportedLanguageTags
+    }
+    
+    
     
 }
