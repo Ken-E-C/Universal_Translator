@@ -10,13 +10,9 @@ import Foundation
 import UIKit
 import CoreLocation
 
-struct bcp47LanguageTag {
-    var languageTag: String?
-    var countryTag: String?
-    var bcp47Tag: String?
-}
 
-protocol LanguageManagerProtocol {
+
+protocol LanguageManagerDelegate {
     func languageTagsUpdated()
 }
 
@@ -25,12 +21,18 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     
     var locationMgr = CLLocationManager()
     var detectedLangTags = [bcp47LanguageTag]()
+    //var allLanguageTags = [bcp47LanguageTag]()
+    var selectedLocalLang = bcp47LanguageTag()
+    var selectedTargetLang = bcp47LanguageTag()
     var TCViewController: TranslationCenterViewController?
     
     
     override init() {
         super.init()
         locationMgr.delegate = self
+        let localLang = Locale.current.languageCode ?? "en"
+        let localCountry = Locale.current.regionCode?.uppercased() ?? "US"
+        selectedTargetLang = LanguageParser.sharedInstance.findLanguageTagByCountryAndLanguageCode(languageCode: localLang, countryCode: localCountry)!
     }
     func checkPermissions() -> Bool{
         let status = CLLocationManager.authorizationStatus()
@@ -70,7 +72,7 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
             geocoder.reverseGeocodeLocation(currentLocation) { (results, error) in
                 if let countryCode = results?.first?.isoCountryCode {
                     self.detectedLangTags = LanguageParser.sharedInstance.findSupportedLocalLanguages(countryCode: countryCode)
-                    
+                    self.selectedTargetLang = self.detectedLangTags[0]
                     self.TCViewController?.languageTagsUpdated()
                 }
             }

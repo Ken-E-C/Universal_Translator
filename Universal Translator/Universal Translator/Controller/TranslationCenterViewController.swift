@@ -8,9 +8,11 @@
 import Foundation
 import UIKit
 import SwiftSpinner
+import googleapis
+import AVFoundation
 
-
-class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate, LanguageManagerProtocol {
+class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource, LanguageManagerDelegate, AudioManagerDelegate {
+ 
 
     @IBOutlet weak var capturedTextView: UITextView!
     @IBOutlet weak var detectLanguageEnableSwitch: UISwitch!
@@ -21,16 +23,45 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     @IBOutlet weak var translatedTextView: UITextView!
     
+    var languagePicker = UIPickerView()
+    var audioData: NSMutableData!
+    
+    let SAMPLE_RATE = 16000
+    var capturedLocalLanguageTranscript = String()
+    //MARK: Init methods
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
+        languagePicker.delegate = self
+        languagePicker.dataSource = self
+        
+        let toolBar = UIToolbar()
+        toolBar.barStyle = UIBarStyle.default
+        toolBar.isTranslucent = true
+        toolBar.tintColor = UIColor(red: 76/255, green: 217/255, blue: 100/255, alpha: 1)
+        toolBar.sizeToFit()
+        
+        let doneButton = UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.plain, target: self, action: #selector (pickerDoneButtonPressed))
+        let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
+        let cancelButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector (pickerCancelButtonPressed))
+        
+        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
+        toolBar.isUserInteractionEnabled = true
+
+        
         capturedTextView.delegate = self
         translatedTextView.delegate = self
-        localLanguageTextField.delegate = self
-        targetLanguageTextField.delegate = self
         
-        targetLanguageTextField.text = TranslationManager.sharedInstance.targetLanguageCode
+        localLanguageTextField.delegate = self
+        localLanguageTextField.inputView = languagePicker
+        localLanguageTextField.inputAccessoryView = toolBar
+        
+        targetLanguageTextField.delegate = self
+        targetLanguageTextField.inputView = languagePicker
+        targetLanguageTextField.inputAccessoryView = toolBar
+        targetLanguageTextField.text = Locale.current.languageCode ?? "en"
+        
         startTranslationStatusButton.layer.cornerRadius = 5
         
         translatedTextView.text = ""
@@ -39,7 +70,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
         view.addGestureRecognizer(tap)
+        
         LanguageManager.sharedInstance.TCViewController = self
+        AudioManager.sharedInstance.delegate = self
         if TranslationManager.sharedInstance.supportedLanguages.isEmpty {
             fetchSupportedLanguagesList()
         }
@@ -47,16 +80,100 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
 
     }
     override func viewDidAppear(_ animated: Bool) {
+        //MARK: Request necessary permissions
         if !LanguageManager.sharedInstance.checkPermissions(){
-            let permissionsAlert = UIAlertController(title: "Error requesting permission", message: "The app can still work without location services. However, the translation would be more effective if the app can identify the language ahead of time.", preferredStyle: .alert)
+            let permissionsAlert = UIAlertController(title: "Error requesting location permission", message: "The app can still work without location services. However, the translation would be more effective if the app can identify the language ahead of time.", preferredStyle: .alert)
             
+            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            permissionsAlert.addAction(okAction)
+            present(permissionsAlert, animated: true, completion: nil)
+        }
+        
+        if !AudioManager.sharedInstance.checkPermissions() {
+            let permissionsAlert = UIAlertController(title: "Error requesting mic permission", message: "Audio transcrription will be disabled. If you wish to enable, please allow use of the mic.", preferredStyle: .alert)
             let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
             permissionsAlert.addAction(okAction)
             present(permissionsAlert, animated: true, completion: nil)
         }
         LanguageManager.sharedInstance.inferLanguage()
     }
-
+    
+    //MARK: Language Setup methods
+    
+    func fetchSupportedLanguagesList() {
+        TranslationManager.sharedInstance.fetchSupportedLanguages { (isSuccessful) in
+            if !isSuccessful {
+                let languageNotFetchedAlert = UIAlertController(title: "Error loading Supported Languages", message: "There was an error with retrieving the list of supported languages. Check your internet connection and reload the app.", preferredStyle: .alert)
+                languageNotFetchedAlert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default action"), style: .default, handler: { _ in
+                    NSLog("The \"OK\" alert occured.")
+                }))
+                self.present(languageNotFetchedAlert, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    func languageTagsUpdated() {
+        if LanguageManager.sharedInstance.detectedLangTags.isEmpty {
+            //display error message if a language could not be inferred
+            let languageNotinferredAlert = UIAlertController(title: "Error Inferring Languages", message: "There was an error with inferring the language using your location. What would you like to do?", preferredStyle: .alert)
+            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Detect Language using audio", comment: "Default action"), style: .default, handler: { _ in
+                //setup detect language using audio feed
+                self.capturedTextView.becomeFirstResponder()
+                NSLog("The \"Detect Language audio\" alert occured.")
+            }))
+            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Detect Language by entering text", comment: "Default action"), style: .default, handler: { _ in
+                self.capturedTextView.becomeFirstResponder()
+                NSLog("The \"Detect Language text\" alert occured.")
+            }))
+            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Ignore and continue", comment: "Default action"), style: .default, handler: { _ in
+                NSLog("The \"Ignore and continue\" alert occured.")
+            }))
+            present(languageNotinferredAlert, animated: true)
+        }
+        else {
+            localLanguageTextField.text = LanguageManager.sharedInstance.detectedLangTags[0].languageTag!
+        }
+        
+    }
+    
+    
+    //MARK: LanguagePicker Stuff
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return LanguageParser.sharedInstance.getLanguageTags().count
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return LanguageParser.sharedInstance.getLanguageTags()[row].languageName
+    }
+    
+    @objc func pickerDoneButtonPressed() {
+        
+        let selectedRow = languagePicker.selectedRow(inComponent: 0)
+        let selectedLang = LanguageParser.sharedInstance.getLanguageTags()[selectedRow]
+        if localLanguageTextField.isEditing {
+            LanguageManager.sharedInstance.selectedLocalLang = selectedLang
+            DispatchQueue.main.async {
+                self.localLanguageTextField.text = selectedLang.languageTag
+            }
+        }
+        else if targetLanguageTextField.isEditing {
+            LanguageManager.sharedInstance.selectedTargetLang = selectedLang
+            DispatchQueue.main.async {
+                self.targetLanguageTextField.text = selectedLang.languageTag
+            }
+        }
+        view.endEditing(true)
+        
+    }
+    
+    @objc func pickerCancelButtonPressed() {
+        view.endEditing(true)
+    }
+    //MARK: Text Based language Detection methods
     func textViewDidEndEditing(_ textView: UITextView) {
         let capturedText = capturedTextView.text ?? ""
         
@@ -118,51 +235,73 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         view.endEditing(true)
     }
     
-    func fetchSupportedLanguagesList() {
-        TranslationManager.sharedInstance.fetchSupportedLanguages { (isSuccessful) in
-            if !isSuccessful {
-                let languageNotFetchedAlert = UIAlertController(title: "Error loading Supported Languages", message: "There was an error with retrieving the list of supported languages. Check your internet connection and reload the app.", preferredStyle: .alert)
-                languageNotFetchedAlert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "Default action"), style: .default, handler: { _ in
-                    NSLog("The \"OK\" alert occured.")
-                }))
-                self.present(languageNotFetchedAlert, animated: true, completion: nil)
-            }
+    //MARK: Speech to text post capture processing methods
+    
+    
+    
+    @IBAction func startTranslationButtonPressed(_ sender: Any) {
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(AVAudioSession.Category.record)
+        } catch {
+            let cantStartRecordingAlert = UIAlertController(title: "Error Starting AudioTranslation", message: "There was a problem starting the audio capture", preferredStyle: .alert)
+            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            cantStartRecordingAlert.addAction(okAction)
+            self.present(cantStartRecordingAlert, animated: true)
         }
+        audioData = NSMutableData()
+        _ = AudioManager.sharedInstance.prepare(specifiedSampleRate: SAMPLE_RATE)
+        SpeechRecognitionManager.sharedInstance.sampleRate = SAMPLE_RATE
+        _ = AudioManager.sharedInstance.start()
     }
     
-    func languageTagsUpdated() {
-        if !LanguageManager.sharedInstance.detectedLangTags.isEmpty {
-            //display error message if a language could not be inferred
-            let languageNotinferredAlert = UIAlertController(title: "Error Inferring Languages", message: "There was an error with inferring the language using your location. What would you like to do?", preferredStyle: .alert)
-            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Detect Language using audio", comment: "Default action"), style: .default, handler: { _ in
-                //setup detect language using audio feed
-                self.capturedTextView.becomeFirstResponder()
-                NSLog("The \"Detect Language audio\" alert occured.")
-            }))
-            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Detect Language by entering text", comment: "Default action"), style: .default, handler: { _ in
-                self.capturedTextView.becomeFirstResponder()
-                NSLog("The \"Detect Language text\" alert occured.")
-            }))
-            languageNotinferredAlert.addAction(UIAlertAction(title: NSLocalizedString("Ignore and continue", comment: "Default action"), style: .default, handler: { _ in
-                NSLog("The \"Ignore and continue\" alert occured.")
-            }))
-            present(languageNotinferredAlert, animated: true)
-        }
-    }
- 
-    @IBAction func localLanguageEntered(_ sender: Any) {
-        DispatchQueue.main.async {
-            TranslationManager.sharedInstance.sourceLanguageCode = self.localLanguageTextField.text
-        }
+    func stopAudio() {
+        _ = AudioManager.sharedInstance.stop()
+        SpeechRecognitionManager.sharedInstance.stopStreaming()
     }
     
-    @IBAction func targetLanguageEntered(_ sender: Any) {
-        DispatchQueue.main.async {
-            TranslationManager.sharedInstance.targetLanguageCode = self.targetLanguageTextField.text!
-        }
+    func processSampleData(_ data: Data) {
+        audioData.append(data)
         
+        // We recommend sending samples in 100ms chunks
+        let chunkSize : Int /* bytes/chunk */ = Int(0.1 /* seconds/chunk */
+            * Double(SAMPLE_RATE) /* samples/second */
+            * 2 /* bytes/sample */);
+        
+        if (audioData.length > chunkSize) {
+            SpeechRecognitionManager.sharedInstance.streamAudioData(audioData, bcp47LangCode: LanguageManager.sharedInstance.selectedLocalLang.bcp47Tag!,
+                                                                    completion:
+                { (response, error) in
+
+                    
+                    if let error = error {
+                        print("Error with processing captured Speech: \(error.localizedDescription)")
+                    } else if let response = response {
+                        var finished = false
+                        print(response)
+                        for result in response.resultsArray! {
+                            if let result = result as? StreamingRecognitionResult {
+                                if result.isFinal {
+                                    finished = true
+                                    for alternative in result.alternativesArray{
+                                        if let alternative = alternative as? SpeechRecognitionAlternative{
+                                            self.capturedTextView.text = alternative.transcript
+                                            self.capturedLocalLanguageTranscript = alternative.transcript
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        //strongSelf.textView.text = response.description
+                        if finished {
+                            self.stopAudio()
+                            self.startTranslation(capturedText: self.capturedLocalLanguageTranscript)
+                        }
+                    }
+            })
+            self.audioData = NSMutableData()
+        }
     }
-    
     
     
 }

@@ -592,11 +592,11 @@
     {
         "Language": "普通話 (香港)",
         "languageCode": "zh-HK",
-        "Language (English name)": "Chinese"
+        "Language (English name)": "Mandarin (Hong-Kong)"
     },
     {
         "Language": "普通话 (中国大陆)",
         "languageCode": "zh",
-        "Language (English name)": "Chinese"
+        "Language (English name)": "Mandarin (Mainland China)"
     }
 ]
