@@ -18,12 +18,14 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     @IBOutlet weak var detectLanguageEnableSwitch: UISwitch!
     @IBOutlet weak var localLanguageTextField: UITextField!
     @IBOutlet weak var targetLanguageTextField: UITextField!
+    @IBOutlet weak var outputVoiceTextField: UITextField!
     
     @IBOutlet weak var startTranslationStatusButton: UIButton!
     
     @IBOutlet weak var translatedTextView: UITextView!
     
     var languagePicker = UIPickerView()
+    var voicePicker = UIPickerView()
     var audioData: NSMutableData!
     
     let SAMPLE_RATE = 16000
@@ -35,6 +37,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
         languagePicker.delegate = self
         languagePicker.dataSource = self
+        
+        voicePicker.delegate = self
+        voicePicker.dataSource = self
         
         let toolBar = UIToolbar()
         toolBar.barStyle = UIBarStyle.default
@@ -60,7 +65,10 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         targetLanguageTextField.delegate = self
         targetLanguageTextField.inputView = languagePicker
         targetLanguageTextField.inputAccessoryView = toolBar
-        targetLanguageTextField.text = Locale.current.languageCode ?? "en"
+        targetLanguageTextField.text = LanguageManager.sharedInstance.selectedTargetLang.languageName
+        outputVoiceTextField.delegate = self
+        outputVoiceTextField.inputView = voicePicker
+        outputVoiceTextField.inputAccessoryView = toolBar
         
         startTranslationStatusButton.layer.cornerRadius = 5
         
@@ -131,7 +139,12 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             present(languageNotinferredAlert, animated: true)
         }
         else {
-            localLanguageTextField.text = LanguageManager.sharedInstance.detectedLangTags[0].languageTag!
+            let selectedLang = LanguageManager.sharedInstance.selectedTargetLang
+            localLanguageTextField.text = selectedLang.languageName
+            VoiceManager.sharedInstance.setVoiceTag(languageCode: selectedLang.bcp47Tag!)
+            VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
+            outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
+            
         }
         
     }
@@ -139,15 +152,38 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     //MARK: LanguagePicker Stuff
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
+
+        switch pickerView {
+        case languagePicker:
+            return 1
+        case voicePicker:
+            return 1
+        default:
+            fatalError("unidentified picker was used")
+        }
     }
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return LanguageParser.sharedInstance.getLanguageTags().count
+        switch pickerView {
+        case languagePicker:
+            return LanguageParser.sharedInstance.getLanguageTags().count
+        case voicePicker:
+            return VoiceManager.sharedInstance.getRegionalTags().count
+        default:
+            fatalError("unidentified picker was used")
+        }
     }
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        return LanguageParser.sharedInstance.getLanguageTags()[row].languageName
+        
+        switch pickerView {
+        case languagePicker:
+            return LanguageParser.sharedInstance.getLanguageTags()[row].languageName
+        case voicePicker:
+            return VoiceManager.sharedInstance.getRegionalTags()[row].voiceName
+        default:
+            fatalError("unidentified picker was used")
+        }
     }
     
     @objc func pickerDoneButtonPressed() {
@@ -157,13 +193,24 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         if localLanguageTextField.isEditing {
             LanguageManager.sharedInstance.selectedLocalLang = selectedLang
             DispatchQueue.main.async {
-                self.localLanguageTextField.text = selectedLang.languageTag
+                self.localLanguageTextField.text = selectedLang.languageName
             }
         }
         else if targetLanguageTextField.isEditing {
             LanguageManager.sharedInstance.selectedTargetLang = selectedLang
+            VoiceManager.sharedInstance.setVoiceTag(languageCode: selectedLang.bcp47Tag!)
+            
             DispatchQueue.main.async {
-                self.targetLanguageTextField.text = selectedLang.languageTag
+                self.targetLanguageTextField.text = selectedLang.languageName
+            }
+        }
+        else if outputVoiceTextField.isEditing {
+            let selectedRow = voicePicker.selectedRow(inComponent: 0)
+            let selectedVoice = VoiceManager.sharedInstance.getRegionalTags()[selectedRow]
+            VoiceManager.sharedInstance.selectedVoice = selectedVoice
+            
+            DispatchQueue.main.async {
+                self.outputVoiceTextField.text = selectedVoice.voiceName
             }
         }
         view.endEditing(true)
@@ -221,6 +268,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                 self.translatedTextView.text = verifiedTranslatedText
                 SwiftSpinner.show(duration: 0.7, title: "Translation Successful")
             }
+            //read out speech
             
             
         }
