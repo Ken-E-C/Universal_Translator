@@ -42,8 +42,10 @@ class AudioManager {
         var status = noErr
         
         let session = AVAudioSession.sharedInstance()
+        
+        
         do {
-            try session.setCategory(AVAudioSession.Category.record)
+            try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker,.allowBluetoothA2DP])
             try session.setPreferredIOBufferDuration(10)
         } catch {
             return -1
@@ -124,6 +126,7 @@ class AudioManager {
     }
     
     func start() -> OSStatus {
+
         return AudioOutputUnitStart(remoteIOUnit!)
     }
     

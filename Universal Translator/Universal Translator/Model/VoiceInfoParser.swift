@@ -80,7 +80,7 @@ class VoiceInfoParser {
     
     }
     
-    func getVoiceTagByLanguageCode(languageCode: String) -> ssmlInfoTag?{
+    func getVoiceTagByLanguageCode(languageCode: String) -> ssmlInfoTag? {
         for voiceTag in allVoiceTags {
             if let verifiedVoiceTagLanguageCode = voiceTag.languageCode {
                 if verifiedVoiceTagLanguageCode == languageCode{
@@ -91,7 +91,7 @@ class VoiceInfoParser {
         return nil
     }
     
-    func getAvailableRegionalVoices(languageCode: String) -> [ssmlInfoTag]{
+    func getAvailableRegionalVoices(languageCode: String) -> [ssmlInfoTag] {
         
         var regionalVoices = [ssmlInfoTag]()
         for voiceTag in allVoiceTags {
@@ -104,5 +104,16 @@ class VoiceInfoParser {
         return regionalVoices
     }
     
+    func getAvailableRegionalVoicesbyISOlangCode(isoLanguageCode: String) -> [ssmlInfoTag] {
+        var regionalVoices = [ssmlInfoTag]()
+        for voiceTag in allVoiceTags {
+            if let verifiedVoiceTagLanguageCode = voiceTag.languageCode {
+                if "\(verifiedVoiceTagLanguageCode.prefix(2))" == isoLanguageCode{
+                    regionalVoices.append(voiceTag)
+                }
+            }
+        }
+        return regionalVoices
+    }
     
 }

@@ -264,6 +264,7 @@
                         <outlet property="startTranslationStatusButton" destination="6nf-Xp-88l" id="hb8-pv-qic"/>
                         <outlet property="targetLanguageTextField" destination="7Fr-9a-8lT" id="gNV-jf-M5r"/>
                         <outlet property="translatedTextView" destination="iwe-tN-Wk7" id="VjC-XI-1Xu"/>
+                        <outlet property="voiceEnabledSwitch" destination="PmR-Qh-Jpo" id="UsD-Fw-BrK"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

@@ -11,6 +11,7 @@
 		8825576822B6EC96000335FE /* supportedVoices.json in Resources */ = {isa = PBXBuildFile; fileRef = 8825576722B6EC96000335FE /* supportedVoices.json */; };
 		8825576A22B6ECD9000335FE /* VoiceInfoParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8825576922B6ECD9000335FE /* VoiceInfoParser.swift */; };
 		8825576C22B6F617000335FE /* VoiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8825576B22B6F617000335FE /* VoiceManager.swift */; };
+		8825576E22B851DE000335FE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8825576D22B851DE000335FE /* AVFoundation.framework */; };
 		882AD5A222B093B200B9BE35 /* APIKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882AD5A122B093B200B9BE35 /* APIKeys.swift */; };
 		886A289522B4613000EEF059 /* language-tags.json in Resources */ = {isa = PBXBuildFile; fileRef = 886A289422B4613000EEF059 /* language-tags.json */; };
 		88A2B3CA22B658A300E25F0A /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A2B3C922B658A300E25F0A /* AudioManager.swift */; };
@@ -31,6 +32,7 @@
 		8825576722B6EC96000335FE /* supportedVoices.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = supportedVoices.json; sourceTree = "<group>"; };
 		8825576922B6ECD9000335FE /* VoiceInfoParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInfoParser.swift; sourceTree = "<group>"; };
 		8825576B22B6F617000335FE /* VoiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceManager.swift; sourceTree = "<group>"; };
+		8825576D22B851DE000335FE /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		882AD5A122B093B200B9BE35 /* APIKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeys.swift; sourceTree = "<group>"; };
 		886A289422B4613000EEF059 /* language-tags.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "language-tags.json"; path = "Universal Translator/Model/language-tags.json"; sourceTree = SOURCE_ROOT; };
 		88A2B3C922B658A300E25F0A /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -55,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8825576E22B851DE000335FE /* AVFoundation.framework in Frameworks */,
 				6371A629725FF40FF2E71F83 /* Pods_Universal_Translator.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -148,6 +151,7 @@
 		93D0329A67420B2CD489B807 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8825576D22B851DE000335FE /* AVFoundation.framework */,
 				922945BBDB5B293BE76920F4 /* Pods_Universal_Translator.framework */,
 			);
 			name = Frameworks;
@@ -187,6 +191,11 @@
 				TargetAttributes = {
 					88C2A47022B0715E00B30D70 = {
 						CreatedOnToolsVersion = 10.2.1;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};

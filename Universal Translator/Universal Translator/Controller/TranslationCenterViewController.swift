@@ -28,8 +28,11 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     var voicePicker = UIPickerView()
     var audioData: NSMutableData!
     
+    @IBOutlet weak var voiceEnabledSwitch: UISwitch!
+    
     let SAMPLE_RATE = 16000
     var capturedLocalLanguageTranscript = String()
+    var translatedLanguageTranscript = String()
     //MARK: Init methods
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -200,17 +203,35 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             LanguageManager.sharedInstance.selectedTargetLang = selectedLang
             VoiceManager.sharedInstance.setVoiceTag(languageCode: selectedLang.bcp47Tag!)
             
+            VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
+            if VoiceManager.sharedInstance.availableRegionalVoices.isEmpty{
+                VoiceManager.sharedInstance.setEquivalentRegionalTags(isoLanguageCode: selectedLang.languageTag!)
+            }
             DispatchQueue.main.async {
                 self.targetLanguageTextField.text = selectedLang.languageName
+                if !VoiceManager.sharedInstance.availableRegionalVoices.isEmpty{
+                    self.voiceEnabledSwitch.isEnabled = true
+                    self.outputVoiceTextField.becomeFirstResponder()
+                }
+                else {
+                    self.voiceEnabledSwitch.isEnabled = false
+                    self.outputVoiceTextField.text = ""
+                }
             }
         }
         else if outputVoiceTextField.isEditing {
             let selectedRow = voicePicker.selectedRow(inComponent: 0)
-            let selectedVoice = VoiceManager.sharedInstance.getRegionalTags()[selectedRow]
+            let selectedVoice = !VoiceManager.sharedInstance.availableRegionalVoices.isEmpty ? VoiceManager.sharedInstance.getRegionalTags()[selectedRow] : nil
             VoiceManager.sharedInstance.selectedVoice = selectedVoice
             
             DispatchQueue.main.async {
-                self.outputVoiceTextField.text = selectedVoice.voiceName
+                if let verifiedSelectedVoice = selectedVoice {
+                    self.outputVoiceTextField.text = verifiedSelectedVoice.voiceName
+                }
+                else {
+                    self.outputVoiceTextField.text = ""
+                }
+                
             }
         }
         view.endEditing(true)
@@ -263,7 +284,13 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         TranslationManager.sharedInstance.textToTranslate = capturedText
         TranslationManager.sharedInstance.translate { (translatedText) in
             guard let verifiedTranslatedText = translatedText else {return}
-            
+            self.translatedLanguageTranscript = verifiedTranslatedText
+            if self.voiceEnabledSwitch.isOn {
+                //start text to Speech translation
+                VoiceManager.sharedInstance.speak(text: self.translatedLanguageTranscript ?? "", completion: {
+                    print("tts completed")
+                })
+            }
             DispatchQueue.main.async {
                 self.translatedTextView.text = verifiedTranslatedText
                 SwiftSpinner.show(duration: 0.7, title: "Translation Successful")
