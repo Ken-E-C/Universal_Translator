@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import BoseWearable
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -17,7 +18,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        BoseWearable.configure()
+        BoseWearable.enableCommonLogging()
         
+        application.isIdleTimerDisabled = true
         
         return true
     }

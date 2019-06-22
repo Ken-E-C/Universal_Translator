@@ -25,7 +25,7 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     var selectedLocalLang = bcp47LanguageTag()
     var selectedTargetLang = bcp47LanguageTag()
     var TCViewController: TranslationCenterViewController?
-    
+    var isSearching = false
     
     override init() {
         super.init()
@@ -56,6 +56,7 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     func inferLanguage(){
         _ = checkPermissions()
         //then obtain location
+        isSearching = true
         locationMgr.startUpdatingLocation()
     }
     
@@ -71,9 +72,12 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
             locationMgr.stopUpdatingLocation()
             geocoder.reverseGeocodeLocation(currentLocation) { (results, error) in
                 if let countryCode = results?.first?.isoCountryCode {
-                    self.detectedLangTags = LanguageParser.sharedInstance.findSupportedLocalLanguages(countryCode: countryCode)
-                    self.selectedTargetLang = self.detectedLangTags[0]
-                    self.TCViewController?.languageTagsUpdated()
+                    if self.isSearching{
+                        self.isSearching = false
+                        self.detectedLangTags = LanguageParser.sharedInstance.findSupportedLocalLanguages(countryCode: countryCode)
+                        self.selectedLocalLang = self.detectedLangTags[0]
+                        self.TCViewController?.languageTagsUpdated()
+                    }
                 }
             }
         }

@@ -10,6 +10,9 @@ import UIKit
 import SwiftSpinner
 import googleapis
 import AVFoundation
+import BoseWearable
+
+
 
 class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource, LanguageManagerDelegate, AudioManagerDelegate {
  
@@ -33,6 +36,32 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     let SAMPLE_RATE = 16000
     var capturedLocalLanguageTranscript = String()
     var translatedLanguageTranscript = String()
+    
+    
+    //Bose Wearable Constants
+    
+    enum RotationMode {
+        case rotationVector
+        case gameRotationVector
+        
+        var sensor: SensorType {
+            switch self {
+            case .rotationVector:
+                return .rotation
+            case .gameRotationVector:
+                return .gameRotation
+            }
+        }
+    }
+    
+    
+    
+    var rotationMode: RotationMode = .rotationVector
+    var sensorDispatch = SensorDispatch(queue: .main)
+    
+    var activeDeviceSession: WearableDeviceSession!
+    
+    var token: ListenerToken?
     //MARK: Init methods
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,43 +73,64 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         voicePicker.delegate = self
         voicePicker.dataSource = self
         
-        let toolBar = UIToolbar()
-        toolBar.barStyle = UIBarStyle.default
-        toolBar.isTranslucent = true
-        toolBar.tintColor = UIColor(red: 76/255, green: 217/255, blue: 100/255, alpha: 1)
-        toolBar.sizeToFit()
+        let pickerToolBar = UIToolbar()
+        pickerToolBar.barStyle = UIBarStyle.default
+        pickerToolBar.isTranslucent = true
+        pickerToolBar.tintColor = UIColor(red: 31/255, green: 117/255, blue: 254/255, alpha: 1)
+        pickerToolBar.sizeToFit()
         
-        let doneButton = UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.plain, target: self, action: #selector (pickerDoneButtonPressed))
-        let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
-        let cancelButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector (pickerCancelButtonPressed))
+        let keyboardToolBar = UIToolbar()
+        keyboardToolBar.barStyle = UIBarStyle.default
+        keyboardToolBar.isTranslucent = true
+        keyboardToolBar.tintColor = UIColor(red: 31/255, green: 117/255, blue: 254/255, alpha: 1)
+        keyboardToolBar.sizeToFit()
         
-        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
-        toolBar.isUserInteractionEnabled = true
-
+        let pickerDoneButton = UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.plain, target: self, action: #selector (pickerDoneButtonPressed))
+        let pickerSpaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
+        let pickerCancelButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector (cancelButtonPressed))
+        
+        let keyboardSpaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
+        let keyboardCancelButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector (cancelButtonPressed))
+        let keyboardTranslateButton = UIBarButtonItem(title: "Translate", style: UIBarButtonItem.Style.plain, target: self, action: #selector (keyboardTranslateButtonPressed))
+        
+        pickerToolBar.setItems([pickerCancelButton, pickerSpaceButton, pickerDoneButton], animated: false)
+        pickerToolBar.isUserInteractionEnabled = true
+        
+        keyboardToolBar.setItems([keyboardCancelButton, keyboardSpaceButton, keyboardTranslateButton], animated: false)
+        keyboardToolBar.isUserInteractionEnabled = true
+        
+        
+        
         
         capturedTextView.delegate = self
+        capturedTextView.inputAccessoryView = keyboardToolBar
+        
         translatedTextView.delegate = self
+        translatedTextView.text = ""
         
         localLanguageTextField.delegate = self
         localLanguageTextField.inputView = languagePicker
-        localLanguageTextField.inputAccessoryView = toolBar
+        localLanguageTextField.inputAccessoryView = pickerToolBar
         
         targetLanguageTextField.delegate = self
         targetLanguageTextField.inputView = languagePicker
-        targetLanguageTextField.inputAccessoryView = toolBar
+        targetLanguageTextField.inputAccessoryView = pickerToolBar
         targetLanguageTextField.text = LanguageManager.sharedInstance.selectedTargetLang.languageName
         outputVoiceTextField.delegate = self
         outputVoiceTextField.inputView = voicePicker
-        outputVoiceTextField.inputAccessoryView = toolBar
+        outputVoiceTextField.inputAccessoryView = pickerToolBar
         
         startTranslationStatusButton.layer.cornerRadius = 5
         
-        translatedTextView.text = ""
-    
-    
-        
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
         view.addGestureRecognizer(tap)
+        
+        sensorDispatch.gestureDataCallback = { [weak self] gesture, timestamp in
+            guard case .doubleTap = gesture else {
+                return
+            }
+            print("double tap Detected")
+        }
         
         LanguageManager.sharedInstance.TCViewController = self
         AudioManager.sharedInstance.delegate = self
@@ -106,6 +156,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             permissionsAlert.addAction(okAction)
             present(permissionsAlert, animated: true, completion: nil)
         }
+        SwiftSpinner.show("Inferring Local Language")
         LanguageManager.sharedInstance.inferLanguage()
     }
     
@@ -124,6 +175,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     }
     
     func languageTagsUpdated() {
+        SwiftSpinner.hide()
         if LanguageManager.sharedInstance.detectedLangTags.isEmpty {
             //display error message if a language could not be inferred
             let languageNotinferredAlert = UIAlertController(title: "Error Inferring Languages", message: "There was an error with inferring the language using your location. What would you like to do?", preferredStyle: .alert)
@@ -148,8 +200,11 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
             outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
             
+            if activeDeviceSession == nil {
+                searchForDevice()
+            }
+            
         }
-        
     }
     
     
@@ -188,7 +243,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             fatalError("unidentified picker was used")
         }
     }
-    
+    //MARK: Picker and Keyboard Button Methods
     @objc func pickerDoneButtonPressed() {
         
         let selectedRow = languagePicker.selectedRow(inComponent: 0)
@@ -238,67 +293,80 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
     }
     
-    @objc func pickerCancelButtonPressed() {
+    @objc func cancelButtonPressed() {
         view.endEditing(true)
     }
+    
+    @objc func keyboardTranslateButtonPressed() {
+        view.endEditing(true)
+        if !capturedTextView.text.isEmpty{
+            startTextBasedTranslation(capturedText: capturedTextView.text!)
+        }
+    }
     //MARK: Text Based language Detection methods
-    func textViewDidEndEditing(_ textView: UITextView) {
-        let capturedText = capturedTextView.text ?? ""
-        
-        switch textView {
-        case capturedTextView:
-
-            SwiftSpinner.show("Starting Translation")
-            //detects the source Language
-            if detectLanguageEnableSwitch.isOn {
-                DispatchQueue.main.async {
-                    SwiftSpinner.sharedInstance.title = "Detecting Language"
-                }
-                
-                TranslationManager.sharedInstance.detectLanguage(forText: capturedTextView.text) { (language) in
-                    
-                    TranslationManager.sharedInstance.sourceLanguageCode = language
-                    LanguageManager.sharedInstance.updateDetectedLanguages(languageCode: language ?? "")
-                    DispatchQueue.main.async {
-                        self.localLanguageTextField.text = language
-                        
-                        SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
-                    }
-                    self.startTranslation(capturedText: capturedText)
-                    
-                }
-            } else {
-                DispatchQueue.main.async {
-                    SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
-                }
-                
-                startTranslation(capturedText: capturedText)
+    
+    
+    private func startTextBasedTranslation(capturedText: String) {
+        if areLanguagesTheSame() {
+            return
+        }
+        SwiftSpinner.show("Starting Translation")
+        //detects the source Language
+        if detectLanguageEnableSwitch.isOn {
+            DispatchQueue.main.async {
+                SwiftSpinner.sharedInstance.title = "Detecting Language"
             }
             
-        default:
-            fatalError("unknown field edited: \(textView)")
+            TranslationManager.sharedInstance.detectLanguage(forText: capturedTextView.text) { (language) in
+                TranslationManager.sharedInstance.sourceLanguageCode = language
+                LanguageManager.sharedInstance.updateDetectedLanguages(languageCode: language ?? "")
+                DispatchQueue.main.async {
+                    self.localLanguageTextField.text = language
+                    SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
+                }
+                self.startTranslation(capturedText: capturedText)
+                
+            }
+        } else {
+            DispatchQueue.main.async {
+                SwiftSpinner.sharedInstance.title = "Translating Captured Phrase"
+            }
+            
+            startTranslation(capturedText: capturedText)
         }
     }
     
     private func startTranslation(capturedText: String) {
         TranslationManager.sharedInstance.textToTranslate = capturedText
+        let isSwitchOn = self.voiceEnabledSwitch.isOn
         TranslationManager.sharedInstance.translate { (translatedText) in
             guard let verifiedTranslatedText = translatedText else {return}
             self.translatedLanguageTranscript = verifiedTranslatedText
-            if self.voiceEnabledSwitch.isOn {
+            if isSwitchOn {
                 //start text to Speech translation
-                VoiceManager.sharedInstance.speak(text: self.translatedLanguageTranscript ?? "", completion: {
+                VoiceManager.sharedInstance.speak(text: self.translatedLanguageTranscript , completion: {
                     print("tts completed")
                 })
             }
             DispatchQueue.main.async {
                 self.translatedTextView.text = verifiedTranslatedText
-                SwiftSpinner.show(duration: 0.7, title: "Translation Successful")
+                SwiftSpinner.show(duration: 0.7, title: "Translation Completed")
             }
-            //read out speech
-            
-            
         }
+    }
+    
+    func areLanguagesTheSame() -> Bool {
+        let localLang = LanguageManager.sharedInstance.selectedLocalLang.languageTag
+        let targetLang = LanguageManager.sharedInstance.selectedTargetLang.languageTag
+        if localLang == targetLang {
+            let languageIdenticalAlert = UIAlertController(title: "Error with Selected Local and Target Language", message: "The target language and the local language cannot be the same. Please change either the local or target language", preferredStyle: .alert)
+            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            languageIdenticalAlert.addAction(okAction)
+            present(languageIdenticalAlert, animated: true, completion: nil)
+            
+            return true
+        }
+        return false
     }
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
@@ -315,6 +383,14 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     
     @IBAction func startTranslationButtonPressed(_ sender: Any) {
+        startAudioTranslation()
+    }
+    
+    func startAudioTranslation() {
+        if areLanguagesTheSame(){
+            return
+        }
+        
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(AVAudioSession.Category.record)
@@ -328,6 +404,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         _ = AudioManager.sharedInstance.prepare(specifiedSampleRate: SAMPLE_RATE)
         SpeechRecognitionManager.sharedInstance.sampleRate = SAMPLE_RATE
         _ = AudioManager.sharedInstance.start()
+        DispatchQueue.main.async {
+            SwiftSpinner.show("Capturing Speech")
+        }
     }
     
     func stopAudio() {
@@ -336,6 +415,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     }
     
     func processSampleData(_ data: Data) {
+        
         audioData.append(data)
         
         // We recommend sending samples in 100ms chunks
@@ -370,6 +450,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                         //strongSelf.textView.text = response.description
                         if finished {
                             self.stopAudio()
+                            DispatchQueue.main.async {
+                                SwiftSpinner.show("Translating speech")
+                            }
                             self.startTranslation(capturedText: self.capturedLocalLanguageTranscript)
                         }
                     }
@@ -378,5 +461,82 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         }
     }
     
+    func headNodDetected() {
+        startAudioTranslation()
+    }
     
+    //Bose Wearable Config Stuff
+    
+    func searchForDevice() {
+        BoseWearable.shared.startDeviceSearch(mode: .alwaysShowUI) { result in
+            switch result {
+            case .success(let session):
+                self.activeDeviceSession = session
+                self.activeDeviceSession.delegate = self
+                session.open()
+            case .failure(let error):
+                print(error)
+                
+            case .cancelled:
+                break
+            }
+        }
+
+    }
+    
+    func listenForWearableDeviceEvents() {
+        token = activeDeviceSession.device?.addEventListener(queue: .main) { [weak self] event in
+            self?.wearableDeviceEvent(event)
+        }
+    }
+    
+    func configureSensors(enable: Bool) {
+        activeDeviceSession.device?.configureSensors { config in
+            config.disableAll()
+
+//            if enable {
+//                config.enable(sensor: rotationMode.sensor, at: ._20ms)
+//            }
+        }
+        activeDeviceSession.device?.configureGestures { config in
+            config.disableAll()
+            config.set(gesture: .doubleTap, enabled: true)
+        }
+    }
+    
+    
+    private func wearableDeviceEvent(_ event: WearableDeviceEvent) {
+        switch event {
+        case .didFailToWriteSensorConfiguration(let error):
+            print(error)
+        case .didUpdateGestureConfiguration(let gestureConfig):
+            print("Updated Gesture Config")
+            print(gestureConfig)
+        default:
+            return
+        }
+    }
+}
+
+extension TranslationCenterViewController: WearableDeviceSessionDelegate {
+    
+    func sessionDidOpen(_ session: WearableDeviceSession) {
+        
+        listenForWearableDeviceEvents()
+        configureSensors(enable: true)
+    }
+    
+    func session(_ session: WearableDeviceSession, didFailToOpenWithError error: Error?) {
+        print(error)
+    }
+    
+    func session(_ session: WearableDeviceSession, didCloseWithError error: Error?) {
+        
+        guard let error = error else {
+            navigationController?.popToRootViewController(animated: true)
+            return
+        }
+        
+        print(error)
+    }
 }
