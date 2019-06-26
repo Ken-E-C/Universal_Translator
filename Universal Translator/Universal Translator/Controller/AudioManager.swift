@@ -45,8 +45,8 @@ class AudioManager {
         
         
         do {
-            try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker,.allowBluetoothA2DP])
-            try session.setPreferredIOBufferDuration(10)
+            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth,.defaultToSpeaker])
+            try session.setPreferredIOBufferDuration(0.01)
         } catch {
             return -1
         }
@@ -62,17 +62,17 @@ class AudioManager {
         audioComponentDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
         audioComponentDescription.componentFlags = 0;
         audioComponentDescription.componentFlagsMask = 0;
-        
+
         // Get the RemoteIO unit
         let remoteIOComponent = AudioComponentFindNext(nil, &audioComponentDescription)
         status = AudioComponentInstanceNew(remoteIOComponent!, &remoteIOUnit)
         if (status != noErr) {
             return status
         }
-        
+
         let bus1 : AudioUnitElement = 1
         var oneFlag : UInt32 = 1
-        
+
         // Configure the RemoteIO unit for input
         status = AudioUnitSetProperty(remoteIOUnit!,
                                       kAudioOutputUnitProperty_EnableIO,
@@ -95,6 +95,7 @@ class AudioManager {
             asbd.mBytesPerFrame = 2
             asbd.mChannelsPerFrame = 1
             asbd.mBitsPerChannel = 16
+
             status = AudioUnitSetProperty(remoteIOUnit!,
                                           kAudioUnitProperty_StreamFormat,
                                           kAudioUnitScope_Output,
@@ -126,7 +127,7 @@ class AudioManager {
     }
     
     func start() -> OSStatus {
-
+        
         return AudioOutputUnitStart(remoteIOUnit!)
     }
     
@@ -174,3 +175,4 @@ func recordingCallback(
     
     return noErr
 }
+

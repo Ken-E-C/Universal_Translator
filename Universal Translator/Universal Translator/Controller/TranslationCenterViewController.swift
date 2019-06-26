@@ -10,8 +10,6 @@ import UIKit
 import SwiftSpinner
 import googleapis
 import AVFoundation
-import BoseWearable
-
 
 
 class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource, LanguageManagerDelegate, AudioManagerDelegate {
@@ -37,35 +35,14 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     var capturedLocalLanguageTranscript = String()
     var translatedLanguageTranscript = String()
     
+    var sessionInProgress = false
     
-    //Bose Wearable Constants
-    
-    enum RotationMode {
-        case rotationVector
-        case gameRotationVector
-        
-        var sensor: SensorType {
-            switch self {
-            case .rotationVector:
-                return .rotation
-            case .gameRotationVector:
-                return .gameRotation
-            }
-        }
-    }
-    
-    
-    
-    var rotationMode: RotationMode = .rotationVector
-    var sensorDispatch = SensorDispatch(queue: .main)
-    
-    var activeDeviceSession: WearableDeviceSession!
-    
-    var token: ListenerToken?
     //MARK: Init methods
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
+        BoseWearableDeviceManager.sharedInstance.delegate = self
         
         languagePicker.delegate = self
         languagePicker.dataSource = self
@@ -125,12 +102,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
         view.addGestureRecognizer(tap)
         
-        sensorDispatch.gestureDataCallback = { [weak self] gesture, timestamp in
-            guard case .doubleTap = gesture else {
-                return
-            }
-            print("double tap Detected")
-        }
+        
         
         LanguageManager.sharedInstance.TCViewController = self
         AudioManager.sharedInstance.delegate = self
@@ -200,8 +172,8 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
             outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
             
-            if activeDeviceSession == nil {
-                searchForDevice()
+            if BoseWearableDeviceManager.sharedInstance.activeWearableSession == nil {
+                BoseWearableDeviceManager.sharedInstance.searchForDevice()
             }
             
         }
@@ -351,6 +323,8 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             DispatchQueue.main.async {
                 self.translatedTextView.text = verifiedTranslatedText
                 SwiftSpinner.show(duration: 0.7, title: "Translation Completed")
+                self.sessionInProgress = false
+                
             }
         }
     }
@@ -383,7 +357,11 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     
     @IBAction func startTranslationButtonPressed(_ sender: Any) {
-        startAudioTranslation()
+        if !sessionInProgress{
+            sessionInProgress = true
+            startAudioTranslation()
+        }
+        
     }
     
     func startAudioTranslation() {
@@ -431,6 +409,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                     
                     if let error = error {
                         print("Error with processing captured Speech: \(error.localizedDescription)")
+                        self.sessionInProgress = false
                     } else if let response = response {
                         var finished = false
                         print(response)
@@ -462,81 +441,15 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     }
     
     func headNodDetected() {
-        startAudioTranslation()
+        
+        if !sessionInProgress {
+            sessionInProgress = true
+            startAudioTranslation()
+        }
+        
     }
     
     //Bose Wearable Config Stuff
     
-    func searchForDevice() {
-        BoseWearable.shared.startDeviceSearch(mode: .alwaysShowUI) { result in
-            switch result {
-            case .success(let session):
-                self.activeDeviceSession = session
-                self.activeDeviceSession.delegate = self
-                session.open()
-            case .failure(let error):
-                print(error)
-                
-            case .cancelled:
-                break
-            }
-        }
-
-    }
     
-    func listenForWearableDeviceEvents() {
-        token = activeDeviceSession.device?.addEventListener(queue: .main) { [weak self] event in
-            self?.wearableDeviceEvent(event)
-        }
-    }
-    
-    func configureSensors(enable: Bool) {
-        activeDeviceSession.device?.configureSensors { config in
-            config.disableAll()
-
-//            if enable {
-//                config.enable(sensor: rotationMode.sensor, at: ._20ms)
-//            }
-        }
-        activeDeviceSession.device?.configureGestures { config in
-            config.disableAll()
-            config.set(gesture: .doubleTap, enabled: true)
-        }
-    }
-    
-    
-    private func wearableDeviceEvent(_ event: WearableDeviceEvent) {
-        switch event {
-        case .didFailToWriteSensorConfiguration(let error):
-            print(error)
-        case .didUpdateGestureConfiguration(let gestureConfig):
-            print("Updated Gesture Config")
-            print(gestureConfig)
-        default:
-            return
-        }
-    }
-}
-
-extension TranslationCenterViewController: WearableDeviceSessionDelegate {
-    
-    func sessionDidOpen(_ session: WearableDeviceSession) {
-        
-        listenForWearableDeviceEvents()
-        configureSensors(enable: true)
-    }
-    
-    func session(_ session: WearableDeviceSession, didFailToOpenWithError error: Error?) {
-        print(error)
-    }
-    
-    func session(_ session: WearableDeviceSession, didCloseWithError error: Error?) {
-        
-        guard let error = error else {
-            navigationController?.popToRootViewController(animated: true)
-            return
-        }
-        
-        print(error)
-    }
 }
