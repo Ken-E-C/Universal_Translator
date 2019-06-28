@@ -37,10 +37,18 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
         BoseWearable.enableCommonLogging()
         
         sensorDispatch.gestureDataCallback = { [weak self] gesture, timestamp in
+            switch gesture {
+            case .headNod:
+                self?.delegate?.headNodDetected()
+            case .headShake:
+                self?.delegate?.headShakeDetected()
+            default:
+                return
+            }
             guard case .headNod = gesture else {
                 return
             }
-            self?.delegate?.headNodDetected()
+            
         }
     }
     
@@ -82,7 +90,7 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
         print("Session opened")
         device = activeWearableSession.device
         listenForWearableDeviceEvents()
-        setupNodGesture()
+        setupGestures()
         
     }
 
@@ -99,7 +107,7 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
             self?.wearableDeviceEvent(event)
         }
     }
-    private func setupNodGesture() {
+    private func setupGestures() {
         activeWearableSession.device?.configureSensors { config in
             config.disableAll()
         }
@@ -107,7 +115,7 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
         activeWearableSession.device?.configureGestures({ (config) in
             config.disableAll()
             config.set(gesture: .headNod, enabled: true)
-            config.set(gesture: .doubleTap, enabled: true)
+            config.set(gesture: .headShake, enabled: true)
             
         })
     }

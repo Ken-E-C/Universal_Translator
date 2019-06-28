@@ -342,9 +342,10 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
             languageIdenticalAlert.addAction(okAction)
             present(languageIdenticalAlert, animated: true, completion: nil)
-            
+            sessionInProgress = false
             return true
         }
+        
         return false
     }
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -410,12 +411,11 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             SpeechRecognitionManager.sharedInstance.streamAudioData(audioData, bcp47LangCode: LanguageManager.sharedInstance.selectedLocalLang.bcp47Tag!,
                                                                     completion:
                 { (response, error) in
-
-                    self.resetTimeoutTimer()
                     if let error = error {
                         print("Error with processing captured Speech: \(error.localizedDescription)")
                         self.sessionInProgress = false
                     } else if let response = response {
+                        self.resetTimeoutTimer()
                         var finished = false
                         print(response)
                         for result in response.resultsArray! {
@@ -454,7 +454,20 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
     }
     
+    func headShakeDetected() {
+        if sessionInProgress{
+            timeoutTimer?.invalidate()
+            terminateSession(message: "Session Cancelled")
+        }
+        
+    }
+    
     @objc func timeoutTimerFired() {
+        timeoutTimer?.invalidate()
+        terminateSession()
+    }
+    
+    func terminateSession(message: String = "Session Timed Out") {
         if AudioManager.sharedInstance.isRecording {
             AudioManager.sharedInstance.stop()
         }
@@ -462,7 +475,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             SpeechRecognitionManager.sharedInstance.stopStreaming()
         }
         sessionInProgress = false
-        SwiftSpinner.show(duration: 1.3, title: "Session Timed Out")
+        SwiftSpinner.show(duration: 1.3, title: message)
         
     }
     

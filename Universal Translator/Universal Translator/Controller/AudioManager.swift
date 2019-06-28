@@ -47,7 +47,7 @@ class AudioManager {
         
         
         do {
-            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth,.defaultToSpeaker])
+            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth,.defaultToSpeaker,.allowBluetoothA2DP])
             try session.setPreferredIOBufferDuration(0.01)
         } catch {
             return -1
