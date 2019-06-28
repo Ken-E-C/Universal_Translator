@@ -25,6 +25,8 @@ class AudioManager {
     
     var selectedInputDevice = inputSource.builtInMic
     
+    var isRecording = false
+    
     func checkPermissions() -> Bool {
         var result = false
         AVAudioSession.sharedInstance().requestRecordPermission({(granted: Bool)-> Void in
@@ -127,11 +129,12 @@ class AudioManager {
     }
     
     func start() -> OSStatus {
-        
+        isRecording = true
         return AudioOutputUnitStart(remoteIOUnit!)
     }
     
     func stop() -> OSStatus {
+        isRecording = false
         return AudioOutputUnitStop(remoteIOUnit!)
     }
 }

@@ -12,6 +12,7 @@ import googleapis
 import AVFoundation
 
 
+
 class TranslationCenterViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource, LanguageManagerDelegate, AudioManagerDelegate {
  
 
@@ -36,6 +37,8 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     var translatedLanguageTranscript = String()
     
     var sessionInProgress = false
+    
+    var timeoutTimer: Timer?
     
     //MARK: Init methods
     override func viewDidLoad() {
@@ -309,6 +312,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     }
     
     private func startTranslation(capturedText: String) {
+        resetTimeoutTimer()
         TranslationManager.sharedInstance.textToTranslate = capturedText
         let isSwitchOn = self.voiceEnabledSwitch.isOn
         TranslationManager.sharedInstance.translate { (translatedText) in
@@ -323,6 +327,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             DispatchQueue.main.async {
                 self.translatedTextView.text = verifiedTranslatedText
                 SwiftSpinner.show(duration: 0.7, title: "Translation Completed")
+                self.timeoutTimer?.invalidate()
                 self.sessionInProgress = false
                 
             }
@@ -368,7 +373,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         if areLanguagesTheSame(){
             return
         }
-        
+        resetTimeoutTimer()
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(AVAudioSession.Category.record)
@@ -406,7 +411,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                                                                     completion:
                 { (response, error) in
 
-                    
+                    self.resetTimeoutTimer()
                     if let error = error {
                         print("Error with processing captured Speech: \(error.localizedDescription)")
                         self.sessionInProgress = false
@@ -446,6 +451,24 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             sessionInProgress = true
             startAudioTranslation()
         }
+        
+    }
+    
+    @objc func timeoutTimerFired() {
+        if AudioManager.sharedInstance.isRecording {
+            AudioManager.sharedInstance.stop()
+        }
+        if SpeechRecognitionManager.sharedInstance.isStreaming(){
+            SpeechRecognitionManager.sharedInstance.stopStreaming()
+        }
+        sessionInProgress = false
+        SwiftSpinner.show(duration: 1.3, title: "Session Timed Out")
+        
+    }
+    
+    private func resetTimeoutTimer() {
+        timeoutTimer?.invalidate()
+        timeoutTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(timeoutTimerFired), userInfo: nil, repeats: false)
         
     }
     
