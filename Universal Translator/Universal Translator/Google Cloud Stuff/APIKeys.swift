@@ -9,4 +9,4 @@
 import Foundation
 
 
-let googleCloudAPIKey = "AIzaSyAGxysp-6_Zh1BNspdRiO5HUKwnYckhJE8"
+let googleCloudAPIKey = "AIzaSyA_ez9DIQxVcq_GnZF9odJPsfcWbNOU5Js"
