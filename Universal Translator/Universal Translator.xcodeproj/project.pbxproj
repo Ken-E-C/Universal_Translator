@@ -24,6 +24,7 @@
 		88C2A47F22B0716000B30D70 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 88C2A47E22B0716000B30D70 /* Assets.xcassets */; };
 		88C2A48222B0716000B30D70 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 88C2A48022B0716000B30D70 /* LaunchScreen.storyboard */; };
 		88C2A48B22B0738100B30D70 /* TranslationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2A48A22B0738100B30D70 /* TranslationManager.swift */; };
+		88C2FF4C22D6AD1300D1C0DA /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2FF4B22D6AD1300D1C0DA /* SettingsViewController.swift */; };
 		88D66B4622B4632100E95FE5 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D66B4522B4632100E95FE5 /* LanguageManager.swift */; };
 		88D66B4822B485D600E95FE5 /* LanguageParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D66B4722B485D600E95FE5 /* LanguageParser.swift */; };
 		88FAC17A22D569BD004F4179 /* GlobalSettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88FAC17922D569BD004F4179 /* GlobalSettingsManager.swift */; };
@@ -62,6 +63,7 @@
 		88C2A48122B0716000B30D70 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		88C2A48322B0716000B30D70 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		88C2A48A22B0738100B30D70 /* TranslationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationManager.swift; sourceTree = "<group>"; };
+		88C2FF4B22D6AD1300D1C0DA /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		88D66B4522B4632100E95FE5 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
 		88D66B4722B485D600E95FE5 /* LanguageParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageParser.swift; sourceTree = "<group>"; };
 		88FAC17922D569BD004F4179 /* GlobalSettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSettingsManager.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 				88A2B3CB22B663BF00E25F0A /* SpeechRecognitionManager.swift */,
 				8825576B22B6F617000335FE /* VoiceManager.swift */,
 				88FAC17922D569BD004F4179 /* GlobalSettingsManager.swift */,
+				88C2FF4B22D6AD1300D1C0DA /* SettingsViewController.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -316,6 +319,7 @@
 				88D66B4622B4632100E95FE5 /* LanguageManager.swift in Sources */,
 				8825576A22B6ECD9000335FE /* VoiceInfoParser.swift in Sources */,
 				88C2A47522B0715E00B30D70 /* AppDelegate.swift in Sources */,
+				88C2FF4C22D6AD1300D1C0DA /* SettingsViewController.swift in Sources */,
 				888A289722BE960C00330C88 /* BoseWearableDeviceManager.swift in Sources */,
 				88C2A47D22B0715E00B30D70 /* Universal_Translator.xcdatamodeld in Sources */,
 				88FAC17A22D569BD004F4179 /* GlobalSettingsManager.swift in Sources */,

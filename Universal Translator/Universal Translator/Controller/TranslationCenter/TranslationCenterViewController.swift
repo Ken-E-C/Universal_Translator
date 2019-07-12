@@ -17,20 +17,23 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
  
 
     @IBOutlet weak var capturedTextView: UITextView!
-    @IBOutlet weak var detectLanguageEnableSwitch: UISwitch!
+    //@IBOutlet weak var detectLanguageEnableSwitch: UISwitch!
     @IBOutlet weak var localLanguageTextField: UITextField!
     @IBOutlet weak var targetLanguageTextField: UITextField!
-    @IBOutlet weak var outputVoiceTextField: UITextField!
+    //@IBOutlet weak var outputVoiceTextField: UITextField!
     
     @IBOutlet weak var startTranslationStatusButton: UIButton!
+    @IBOutlet weak var inputSelectorButton: UIButton!
+    @IBOutlet weak var outputSelectorButton: UIButton!
     
+    @IBOutlet weak var translatorControlsSubview: UIView!
     @IBOutlet weak var translatedTextView: UITextView!
     
     var languagePicker = UIPickerView()
     var voicePicker = UIPickerView()
     var audioData: NSMutableData!
     
-    @IBOutlet weak var voiceEnabledSwitch: UISwitch!
+    //@IBOutlet weak var voiceEnabledSwitch: UISwitch!
     
     let SAMPLE_RATE = 16000
     var capturedLocalLanguageTranscript = String()
@@ -96,11 +99,40 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         targetLanguageTextField.inputView = languagePicker
         targetLanguageTextField.inputAccessoryView = pickerToolBar
         targetLanguageTextField.text = LanguageManager.sharedInstance.selectedTargetLang.languageName
-        outputVoiceTextField.delegate = self
-        outputVoiceTextField.inputView = voicePicker
-        outputVoiceTextField.inputAccessoryView = pickerToolBar
+//        outputVoiceTextField.delegate = self
+//        outputVoiceTextField.inputView = voicePicker
+//        outputVoiceTextField.inputAccessoryView = pickerToolBar
         
-        startTranslationStatusButton.layer.cornerRadius = 5
+        startTranslationStatusButton.layer.cornerRadius = 75
+        startTranslationStatusButton.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
+        startTranslationStatusButton.layer.masksToBounds = false
+        startTranslationStatusButton.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
+        startTranslationStatusButton.layer.shadowOpacity = 1.0
+        startTranslationStatusButton.layer.shadowRadius = 0.75
+        
+        inputSelectorButton.layer.cornerRadius = 15
+        inputSelectorButton.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
+        inputSelectorButton.layer.masksToBounds = false
+        inputSelectorButton.layer.shadowOffset = CGSize(width: 0.0, height: 2.0)
+        inputSelectorButton.layer.shadowOpacity = 1.0
+        inputSelectorButton.layer.shadowRadius = 0.75
+        
+        outputSelectorButton.layer.cornerRadius = 15
+        outputSelectorButton.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
+        outputSelectorButton.layer.masksToBounds = false
+        outputSelectorButton.layer.shadowOffset = CGSize(width: 0.0, height: 2.0)
+        outputSelectorButton.layer.shadowOpacity = 1.0
+        outputSelectorButton.layer.shadowRadius = 0.75
+        
+        translatorControlsSubview.layer.cornerRadius = 64
+        translatorControlsSubview.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
+        translatorControlsSubview.layer.masksToBounds = false
+        translatorControlsSubview.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
+        translatorControlsSubview.layer.shadowOpacity = 1.0
+        translatorControlsSubview.layer.shadowRadius = 0.75
+        
+        
+        
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
         view.addGestureRecognizer(tap)
@@ -173,7 +205,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             localLanguageTextField.text = selectedLang.languageName
             VoiceManager.sharedInstance.setVoiceTag(languageCode: selectedLang.bcp47Tag!)
             VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
-            outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
+            //outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
             
             if BoseWearableDeviceManager.sharedInstance.activeWearableSession == nil {
                 BoseWearableDeviceManager.sharedInstance.searchForDevice()
@@ -240,30 +272,30 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             DispatchQueue.main.async {
                 self.targetLanguageTextField.text = selectedLang.languageName
                 if !VoiceManager.sharedInstance.availableRegionalVoices.isEmpty{
-                    self.voiceEnabledSwitch.isEnabled = true
-                    self.outputVoiceTextField.becomeFirstResponder()
+//                    self.voiceEnabledSwitch.isEnabled = true
+//                    self.outputVoiceTextField.becomeFirstResponder()
                 }
                 else {
-                    self.voiceEnabledSwitch.isEnabled = false
-                    self.outputVoiceTextField.text = ""
+//                    self.voiceEnabledSwitch.isEnabled = false
+//                    self.outputVoiceTextField.text = ""
                 }
             }
         }
-        else if outputVoiceTextField.isEditing {
-            let selectedRow = voicePicker.selectedRow(inComponent: 0)
-            let selectedVoice = !VoiceManager.sharedInstance.availableRegionalVoices.isEmpty ? VoiceManager.sharedInstance.getRegionalTags()[selectedRow] : nil
-            VoiceManager.sharedInstance.selectedVoice = selectedVoice
-            
-            DispatchQueue.main.async {
-                if let verifiedSelectedVoice = selectedVoice {
-                    self.outputVoiceTextField.text = verifiedSelectedVoice.voiceName
-                }
-                else {
-                    self.outputVoiceTextField.text = ""
-                }
-                
-            }
-        }
+//        else if outputVoiceTextField.isEditing {
+//            let selectedRow = voicePicker.selectedRow(inComponent: 0)
+//            let selectedVoice = !VoiceManager.sharedInstance.availableRegionalVoices.isEmpty ? VoiceManager.sharedInstance.getRegionalTags()[selectedRow] : nil
+//            VoiceManager.sharedInstance.selectedVoice = selectedVoice
+//
+//            DispatchQueue.main.async {
+//                if let verifiedSelectedVoice = selectedVoice {
+//                    //self.outputVoiceTextField.text = verifiedSelectedVoice.voiceName
+//                }
+//                else {
+//                    //self.outputVoiceTextField.text = ""
+//                }
+//
+//            }
+//        }
         view.endEditing(true)
         
     }
@@ -287,7 +319,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         }
         SwiftSpinner.show("Starting Translation")
         //detects the source Language
-        if detectLanguageEnableSwitch.isOn {
+        if /*detectLanguageEnableSwitch.isOn*/ true {
             DispatchQueue.main.async {
                 SwiftSpinner.sharedInstance.title = "Detecting Language"
             }
@@ -314,11 +346,11 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     private func startTranslation(capturedText: String) {
         resetTimeoutTimer()
         TranslationManager.sharedInstance.textToTranslate = capturedText
-        let isSwitchOn = self.voiceEnabledSwitch.isOn
+        //let isSwitchOn = self.voiceEnabledSwitch.isOn
         TranslationManager.sharedInstance.translate { (translatedText) in
             guard let verifiedTranslatedText = translatedText else {return}
             self.translatedLanguageTranscript = verifiedTranslatedText
-            if isSwitchOn {
+            if /*isSwitchOn*/ true {
                 //start text to Speech translation
                 VoiceManager.sharedInstance.speak(text: self.translatedLanguageTranscript , completion: {
                     print("tts completed")
