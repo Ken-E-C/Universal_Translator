@@ -26,6 +26,7 @@ class LanguageManager: NSObject, CLLocationManagerDelegate {
     var selectedTargetLang = bcp47LanguageTag()
     var TCViewController: TranslationCenterViewController?
     var isSearching = false
+    var isFirstRuntime = true
     
     override init() {
         super.init()

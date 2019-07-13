@@ -15,13 +15,12 @@ enum SetGetType {
 
 enum SettingsType {
     case inferLanguage
-    case bluetoothEnable
+    case bluetoothHeadsetEnable
     case bluetoothInputEnable
     case bluetoothOutputEnable
+    case gestureEnable
     case detectLocalLanguageText
     case enableVoiceOutput
-    
-    
 }
 
 
@@ -30,16 +29,22 @@ class GlobalSettingsManager {
     //pull data from User Defaults
     
     static let sharedInstance = GlobalSettingsManager()
-    init() {
-        loadSettings()
-    }
     
-    private func loadSettings(){
+    
+    func getSettings() {
         
     }
     
-    func setGet(setGetStatus: SetGetType, setting: SettingsType, to value: Bool){
+    func setGet(setGetStatus: SetGetType, setting: SettingsType, to value: Any?) -> Any?{
         
+        switch setGetStatus {
+            
+        case .set:
+            UserDefaults.standard.set(value, forKey: "\(setting)")
+        case .get:
+            return UserDefaults.standard.bool(forKey: "\(setting)")
+        }
+        return nil
     }
     
     func saveSettings() {

@@ -29,6 +29,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     @IBOutlet weak var translatorControlsSubview: UIView!
     @IBOutlet weak var translatedTextView: UITextView!
     
+    //@IBOutlet weak var translatedTextMacroView: UIView!
+    @IBOutlet weak var targetLanguageMacroView: UIView!
+    
     var languagePicker = UIPickerView()
     var voicePicker = UIPickerView()
     var audioData: NSMutableData!
@@ -40,6 +43,12 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     var translatedLanguageTranscript = String()
     
     var sessionInProgress = false
+    
+    //declaring settings with default values
+    var gesturesEnabled = false
+    var voiceOutputEnabled = false
+    var inferLanguageValue = false
+    var detectLanguageValue = false
     
     var timeoutTimer: Timer?
     
@@ -103,35 +112,70 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
 //        outputVoiceTextField.inputView = voicePicker
 //        outputVoiceTextField.inputAccessoryView = pickerToolBar
         
+        //buttons and UI Stuff
+        let defaultShadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
+        let defaultMaskToBounds = false
+        let defaultShadowOffset = CGSize(width: 0.0, height: 2.0)
+        let defaultShadowOpacity: Float = 1.0
+        let defaultShadowRadius: CGFloat = 0.75
+        
         startTranslationStatusButton.layer.cornerRadius = 75
-        startTranslationStatusButton.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
-        startTranslationStatusButton.layer.masksToBounds = false
+        startTranslationStatusButton.layer.shadowColor = defaultShadowColor
+        startTranslationStatusButton.layer.masksToBounds = defaultMaskToBounds
         startTranslationStatusButton.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
-        startTranslationStatusButton.layer.shadowOpacity = 1.0
-        startTranslationStatusButton.layer.shadowRadius = 0.75
+        startTranslationStatusButton.layer.shadowOpacity = defaultShadowOpacity
+        startTranslationStatusButton.layer.shadowRadius = defaultShadowRadius
         
         inputSelectorButton.layer.cornerRadius = 15
-        inputSelectorButton.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
-        inputSelectorButton.layer.masksToBounds = false
-        inputSelectorButton.layer.shadowOffset = CGSize(width: 0.0, height: 2.0)
-        inputSelectorButton.layer.shadowOpacity = 1.0
-        inputSelectorButton.layer.shadowRadius = 0.75
+        inputSelectorButton.layer.shadowColor = defaultShadowColor
+        inputSelectorButton.layer.masksToBounds = defaultMaskToBounds
+        inputSelectorButton.layer.shadowOffset = defaultShadowOffset
+        inputSelectorButton.layer.shadowOpacity = defaultShadowOpacity
+        inputSelectorButton.layer.shadowRadius = defaultShadowRadius
         
         outputSelectorButton.layer.cornerRadius = 15
-        outputSelectorButton.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
-        outputSelectorButton.layer.masksToBounds = false
-        outputSelectorButton.layer.shadowOffset = CGSize(width: 0.0, height: 2.0)
-        outputSelectorButton.layer.shadowOpacity = 1.0
-        outputSelectorButton.layer.shadowRadius = 0.75
+        outputSelectorButton.layer.shadowColor = defaultShadowColor
+        outputSelectorButton.layer.masksToBounds = defaultMaskToBounds
+        outputSelectorButton.layer.shadowOffset = defaultShadowOffset
+        outputSelectorButton.layer.shadowOpacity = defaultShadowOpacity
+        outputSelectorButton.layer.shadowRadius = defaultShadowRadius
         
         translatorControlsSubview.layer.cornerRadius = 64
-        translatorControlsSubview.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
-        translatorControlsSubview.layer.masksToBounds = false
+        translatorControlsSubview.layer.shadowColor = defaultShadowColor
+        translatorControlsSubview.layer.masksToBounds = defaultMaskToBounds
         translatorControlsSubview.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
-        translatorControlsSubview.layer.shadowOpacity = 1.0
-        translatorControlsSubview.layer.shadowRadius = 0.75
+        translatorControlsSubview.layer.shadowOpacity = defaultShadowOpacity
+        translatorControlsSubview.layer.shadowRadius = defaultShadowRadius
         
+        //translatedTextMacroView.layer.cornerRadius = 92
         
+        capturedTextView.layer.cornerRadius = 20
+        capturedTextView.layer.shadowColor = defaultShadowColor
+        capturedTextView.layer.masksToBounds = defaultMaskToBounds
+        capturedTextView.layer.shadowOffset = defaultShadowOffset
+        capturedTextView.layer.shadowOpacity = defaultShadowOpacity
+        capturedTextView.layer.shadowRadius = defaultShadowRadius
+        
+        translatedTextView.layer.cornerRadius = 20
+        translatedTextView.layer.shadowColor = defaultShadowColor
+        translatedTextView.layer.masksToBounds = defaultMaskToBounds
+        translatedTextView.layer.shadowOffset = defaultShadowOffset
+        translatedTextView.layer.shadowOpacity = defaultShadowOpacity
+        translatedTextView.layer.shadowRadius = defaultShadowRadius
+        
+        targetLanguageMacroView.layer.cornerRadius = 27
+        targetLanguageMacroView.layer.shadowColor = defaultShadowColor
+        targetLanguageMacroView.layer.masksToBounds = defaultMaskToBounds
+        targetLanguageMacroView.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
+        targetLanguageMacroView.layer.shadowOpacity = defaultShadowOpacity
+        targetLanguageMacroView.layer.shadowRadius = defaultShadowRadius
+        
+        targetLanguageTextField.layer.cornerRadius = 15
+        targetLanguageTextField.layer.shadowColor = defaultShadowColor
+        targetLanguageTextField.layer.masksToBounds = defaultMaskToBounds
+        targetLanguageTextField.layer.shadowOffset = defaultShadowOffset
+        targetLanguageTextField.layer.shadowOpacity = defaultShadowOpacity
+        targetLanguageTextField.layer.shadowRadius = defaultShadowRadius
         
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
@@ -145,7 +189,6 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             fetchSupportedLanguagesList()
         }
         
-
     }
     override func viewDidAppear(_ animated: Bool) {
         //MARK: Request necessary permissions
@@ -163,8 +206,18 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             permissionsAlert.addAction(okAction)
             present(permissionsAlert, animated: true, completion: nil)
         }
-        SwiftSpinner.show("Inferring Local Language")
-        LanguageManager.sharedInstance.inferLanguage()
+        
+        gesturesEnabled = GlobalSettingsManager.sharedInstance.setGet(setGetStatus: .get, setting: .gestureEnable, to: nil) as! Bool
+        voiceOutputEnabled = GlobalSettingsManager.sharedInstance.setGet(setGetStatus: .get, setting: .enableVoiceOutput, to: nil) as! Bool
+        inferLanguageValue = GlobalSettingsManager.sharedInstance.setGet(setGetStatus: .get, setting: .inferLanguage, to: nil) as! Bool
+        detectLanguageValue = GlobalSettingsManager.sharedInstance.setGet(setGetStatus: .get, setting: .detectLocalLanguageText, to: nil) as! Bool
+        
+        if inferLanguageValue && LanguageManager.sharedInstance.isFirstRuntime {
+            LanguageManager.sharedInstance.isFirstRuntime = false
+            SwiftSpinner.show("Inferring Local Language")
+            LanguageManager.sharedInstance.inferLanguage()
+        }
+        
     }
     
     //MARK: Language Setup methods
@@ -207,7 +260,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
             //outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
             
-            if BoseWearableDeviceManager.sharedInstance.activeWearableSession == nil {
+            if BoseWearableDeviceManager.sharedInstance.activeWearableSession == nil && gesturesEnabled {
                 BoseWearableDeviceManager.sharedInstance.searchForDevice()
             }
             
@@ -319,7 +372,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         }
         SwiftSpinner.show("Starting Translation")
         //detects the source Language
-        if /*detectLanguageEnableSwitch.isOn*/ true {
+        
+        
+        if detectLanguageValue {
             DispatchQueue.main.async {
                 SwiftSpinner.sharedInstance.title = "Detecting Language"
             }
@@ -347,10 +402,11 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         resetTimeoutTimer()
         TranslationManager.sharedInstance.textToTranslate = capturedText
         //let isSwitchOn = self.voiceEnabledSwitch.isOn
+
         TranslationManager.sharedInstance.translate { (translatedText) in
             guard let verifiedTranslatedText = translatedText else {return}
             self.translatedLanguageTranscript = verifiedTranslatedText
-            if /*isSwitchOn*/ true {
+            if self.voiceOutputEnabled {
                 //start text to Speech translation
                 VoiceManager.sharedInstance.speak(text: self.translatedLanguageTranscript , completion: {
                     print("tts completed")
@@ -374,7 +430,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
             languageIdenticalAlert.addAction(okAction)
             present(languageIdenticalAlert, animated: true, completion: nil)
-            sessionInProgress = false
+            terminateSession(message: "Error with Language Selection")
             return true
         }
         
@@ -478,20 +534,20 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     }
     
     func headNodDetected() {
-        
-        if !sessionInProgress {
-            sessionInProgress = true
-            startAudioTranslation()
+        if gesturesEnabled {
+            if !sessionInProgress {
+                sessionInProgress = true
+                startAudioTranslation()
+            }
         }
-        
     }
     
     func headShakeDetected() {
+
         if sessionInProgress{
             timeoutTimer?.invalidate()
             terminateSession(message: "Session Cancelled")
         }
-        
     }
     
     @objc func timeoutTimerFired() {
@@ -501,7 +557,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     func terminateSession(message: String = "Session Timed Out") {
         if AudioManager.sharedInstance.isRecording {
-            AudioManager.sharedInstance.stop()
+            _ = AudioManager.sharedInstance.stop()
         }
         if SpeechRecognitionManager.sharedInstance.isStreaming(){
             SpeechRecognitionManager.sharedInstance.stopStreaming()
