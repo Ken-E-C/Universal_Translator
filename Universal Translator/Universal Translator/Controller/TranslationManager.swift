@@ -16,6 +16,7 @@ enum TranslationAPI {
     case translate
     case supportedLanguages
     
+    
     func getURL() -> String {
         var urlString = ""
         
@@ -63,8 +64,12 @@ class TranslationManager: NSObject {
     var textToTranslate: String?
     //var targetLanguageCode: String = Locale.current.languageCode ?? "en"
     
+    var timeoutTimer: Timer?
+    var isRunning = false
+    var timeoutCallback: ((String)->(Void))?
+    
     private func makeRequest(usingTranslationAPI api: TranslationAPI, urlParams: [String: String], completion: @escaping (_ results: Data?) -> Void) {
-        
+        isRunning = true
         if var components = URLComponents(string: api.getURL()) {
             var newQueryItems = [URLQueryItem]()
             for (key,value) in urlParams {
@@ -77,6 +82,10 @@ class TranslationManager: NSObject {
                 
                 let session = URLSession(configuration: .default)
                 
+                if !self.isRunning {
+                    return
+                }
+                resetTimeoutTimer()
                 let task = session.dataTask(with: request) { (results, response, error) in
                     if let error = error {
                         print(error)
@@ -84,6 +93,7 @@ class TranslationManager: NSObject {
                     }
                     else {
                         if let response = response as? HTTPURLResponse {
+                            self.timeoutTimer?.invalidate()
                             if response.statusCode == 200 || response.statusCode == 201 {
                                 if let verifiedResults = results{
                                     completion(verifiedResults)
@@ -109,6 +119,7 @@ class TranslationManager: NSObject {
         
         makeRequest(usingTranslationAPI: .detectLanguage, urlParams: urlParams) { (results) in
             guard let results = results else {completion(nil); return}
+            
             
             do {
                 let data = try JSON(data: results)
@@ -190,6 +201,21 @@ class TranslationManager: NSObject {
                 }
             }
         }
+    }
+    
+    private func resetTimeoutTimer() {
+        timeoutTimer?.invalidate()
+        timeoutTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(timeoutTimerFired), userInfo: nil, repeats: false)
+    }
+    
+    @objc private func timeoutTimerFired() {
+        isRunning = false
+        timeoutTimer?.invalidate()
+        //notify TranslationCenter that the Speech Recognition Manager Timed Out
+        guard let verifiedTimeoutCallback = timeoutCallback else {
+            fatalError("No timeout callback was initialized in the SpeechRecognitionManager")
+        }
+        verifiedTimeoutCallback("Translation Operation Timed out")
     }
 }
 

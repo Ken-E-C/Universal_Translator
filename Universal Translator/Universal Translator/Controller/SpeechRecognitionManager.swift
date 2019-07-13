@@ -32,6 +32,11 @@ class SpeechRecognitionManager {
     private var call : GRPCProtoCall!
 
     static let sharedInstance = SpeechRecognitionManager()
+    
+    private var timeoutTimer: Timer?
+    
+    var timeoutCallback: (()->Void)?
+    
 
     func streamAudioData(_ audioData: NSData, bcp47LangCode: String, completion: @escaping SpeechRecognitionCompletionHandler) {
         if (!streaming) {
@@ -42,7 +47,15 @@ class SpeechRecognitionManager {
             call = client.rpcToStreamingRecognize(withRequestsWriter: writer,
                                                     eventHandler:
             { (done, response, error) in
-                completion(response, error as NSError?)
+                if self.streaming {
+                    completion(response, error as NSError?)
+                    if !done {
+                        self.resetTimeoutTimer()
+                    }
+                    else {
+                        self.timeoutTimer?.invalidate()
+                    }
+                }
             })
             // authenticate using an API key obtained from the Google Cloud Console
             call.requestHeaders.setObject(NSString(string:googleCloudAPIKey),
@@ -55,6 +68,7 @@ class SpeechRecognitionManager {
 
             call.start()
             streaming = true
+            resetTimeoutTimer()
 
             // send an initial request message to configure the service
             let recognitionConfig = RecognitionConfig()
@@ -87,12 +101,25 @@ class SpeechRecognitionManager {
         }
         writer.finishWithError(nil)
         streaming = false
+        timeoutTimer?.invalidate()
     }
 
     func isStreaming() -> Bool {
         return streaming
     }
     
+    private func resetTimeoutTimer() {
+        timeoutTimer?.invalidate()
+        timeoutTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(timeoutTimerFired), userInfo: nil, repeats: false)
+    }
     
+    @objc private func timeoutTimerFired() {
+        stopStreaming()
+        //notify TranslationCenter that the Speech Recognition Manager Timed Out
+        guard let verifiedTimeoutCallback = timeoutCallback else {
+            fatalError("No timeout callback was initialized in the SpeechRecognitionManager")
+        }
+        verifiedTimeoutCallback()
+    }
 }
 

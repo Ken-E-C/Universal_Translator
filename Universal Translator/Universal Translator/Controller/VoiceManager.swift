@@ -26,6 +26,10 @@ class VoiceManager: NSObject, AVAudioPlayerDelegate {
     var selectedVoice: ssmlInfoTag?
     var availableRegionalVoices = [ssmlInfoTag]()
     
+    var timeoutTimer: Timer?
+    var timeoutCallback: ((String)->(Void))?
+    var isRunning = false
+    
     func setVoiceTag(languageCode: String) {
         selectedVoice = VoiceInfoParser.sharedInstance.getVoiceTagByLanguageCode(languageCode: languageCode)
     }
@@ -41,6 +45,7 @@ class VoiceManager: NSObject, AVAudioPlayerDelegate {
     }
     
     func speak(text: String, completion: @escaping () -> Void) {
+        isRunning = true
         guard let verifiedSelectedVoice = selectedVoice else {
             return
         }
@@ -51,13 +56,18 @@ class VoiceManager: NSObject, AVAudioPlayerDelegate {
         }
 
         self.busy = true
-
+        self.resetTimeoutTimer()
         DispatchQueue.global(qos: .background).async {
             guard let postData = self.buildPostData(text: text) else {return}
             let headers = ["X-Goog-Api-Key": googleCloudAPIKey, "Content-Type": "application/json; charset=utf-8"]
             
             let response = self.makePOSTRequest(url: self.ttsAPIUrl, postData: postData, headers: headers)
-
+            self.timeoutTimer?.invalidate()
+            
+            if !self.isRunning {
+                return
+            }
+            self.isRunning = false
             // Get the `audioContent` (as a base64 encoded string) from the response.
             guard let audioContent = response["audioContent"] as? String else {
                 print("Invalid response: \(response)")
@@ -156,5 +166,19 @@ class VoiceManager: NSObject, AVAudioPlayerDelegate {
         
         self.completionHandler!()
         self.completionHandler = nil
+    }
+    
+    private func resetTimeoutTimer() {
+        timeoutTimer?.invalidate()
+        timeoutTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(timeoutTimerFired), userInfo: nil, repeats: false)
+    }
+    
+    @objc private func timeoutTimerFired() {
+        isRunning = false
+        //notify TranslationCenter that the Voice Manager Timed Out
+        guard let verifiedTimeoutCallback = timeoutCallback else {
+            fatalError("No timeout callback was initialized in the VoiceManager")
+        }
+        verifiedTimeoutCallback("Text to Speech Timed Out")
     }
 }

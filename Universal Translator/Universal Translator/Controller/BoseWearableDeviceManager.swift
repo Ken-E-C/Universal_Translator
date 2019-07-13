@@ -45,9 +45,7 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
             default:
                 return
             }
-            guard case .headNod = gesture else {
-                return
-            }
+            
             
         }
     }
@@ -135,13 +133,6 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
             // Unblock the UI when the sensor service is resumed.
             //suspensionOverlay?.removeFromSuperview()
             print("Resume Wearable Sensor Service")
-        case .didReceiveGestureData(let gestureData):
-            switch gestureData.gesture {
-            case .headNod:
-                delegate?.headNodDetected()
-            default :
-                print("\(gestureData.gesture) detected")
-            }
         case .didFailToWriteGestureConfiguration(let error):
             print(error)
         default:

@@ -50,7 +50,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     var inferLanguageValue = false
     var detectLanguageValue = false
     
-    var timeoutTimer: Timer?
+    //var timeoutTimer: Timer?
     
     //MARK: Init methods
     override func viewDidLoad() {
@@ -64,6 +64,10 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
         voicePicker.delegate = self
         voicePicker.dataSource = self
+        
+        //setupTimerCallbacks
+        SpeechRecognitionManager.sharedInstance.timeoutCallback = speechRecognitionManagerTimedOut
+        TranslationManager.sharedInstance.timeoutCallback = terminateSession
         
         let pickerToolBar = UIToolbar()
         pickerToolBar.barStyle = UIBarStyle.default
@@ -399,7 +403,6 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     }
     
     private func startTranslation(capturedText: String) {
-        resetTimeoutTimer()
         TranslationManager.sharedInstance.textToTranslate = capturedText
         //let isSwitchOn = self.voiceEnabledSwitch.isOn
 
@@ -415,7 +418,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             DispatchQueue.main.async {
                 self.translatedTextView.text = verifiedTranslatedText
                 SwiftSpinner.show(duration: 0.7, title: "Translation Completed")
-                self.timeoutTimer?.invalidate()
+                //self.timeoutTimer?.invalidate()
                 self.sessionInProgress = false
                 
             }
@@ -446,10 +449,10 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         view.endEditing(true)
     }
     
-    //MARK: Speech to text post capture processing methods
     
     
     
+    //MARK: User Triggered translation initiation and Termination methods
     @IBAction func startTranslationButtonPressed(_ sender: Any) {
         if !sessionInProgress{
             sessionInProgress = true
@@ -458,11 +461,35 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         
     }
     
+    func headNodDetected() {
+        if gesturesEnabled {
+            if !sessionInProgress {
+                sessionInProgress = true
+                startAudioTranslation()
+            }
+            else {
+                SwiftSpinner.show("Processing Captured Speech")
+                _ = AudioManager.sharedInstance.stop()
+            }
+        }
+    }
+    
+    func headShakeDetected() {
+        
+        if sessionInProgress{
+            //timeoutTimer?.invalidate()
+            stopAudio()
+            terminateSession(message: "Session Cancelled")
+        }
+    }
+    //MARK: Speech to text post capture processing methods
+    
+    
     func startAudioTranslation() {
         if areLanguagesTheSame(){
+            sessionInProgress = false
             return
         }
-        resetTimeoutTimer()
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(AVAudioSession.Category.record)
@@ -483,7 +510,10 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     func stopAudio() {
         _ = AudioManager.sharedInstance.stop()
-        SpeechRecognitionManager.sharedInstance.stopStreaming()
+        if SpeechRecognitionManager.sharedInstance.isStreaming() {
+            SpeechRecognitionManager.sharedInstance.stopStreaming()
+        }
+        
     }
     
     func processSampleData(_ data: Data) {
@@ -499,14 +529,16 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             SpeechRecognitionManager.sharedInstance.streamAudioData(audioData, bcp47LangCode: LanguageManager.sharedInstance.selectedLocalLang.bcp47Tag!,
                                                                     completion:
                 { (response, error) in
-                    if let error = error {
-                        print("Error with processing captured Speech: \(error.localizedDescription)")
-                        self.sessionInProgress = false
-                    } else if let response = response {
-                        self.resetTimeoutTimer()
+                    if let verifiedError = error {
+                        print("Error with processing captured Speech: \(verifiedError.localizedDescription)")
+                        if self.sessionInProgress {
+                            self.sessionInProgress = false
+                            self.terminateSession()
+                        }
+                    } else if let verifiedResponse = response {
                         var finished = false
-                        print(response)
-                        for result in response.resultsArray! {
+                        print(verifiedResponse)
+                        for result in verifiedResponse.resultsArray! {
                             if let result = result as? StreamingRecognitionResult {
                                 if result.isFinal {
                                     finished = true
@@ -521,55 +553,43 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                         }
                         //strongSelf.textView.text = response.description
                         if finished {
-                            self.stopAudio()
-                            DispatchQueue.main.async {
-                                SwiftSpinner.show("Translating speech")
-                            }
-                            self.startTranslation(capturedText: self.capturedLocalLanguageTranscript)
+                            self.prepareAndStartTranslate()
+                            
                         }
                     }
             })
             self.audioData = NSMutableData()
         }
     }
-    
-    func headNodDetected() {
-        if gesturesEnabled {
-            if !sessionInProgress {
-                sessionInProgress = true
-                startAudioTranslation()
-            }
+    private func prepareAndStartTranslate() {
+        stopAudio()
+        DispatchQueue.main.async {
+            SwiftSpinner.show("Translating speech")
         }
+        startTranslation(capturedText: self.capturedLocalLanguageTranscript)
     }
     
-    func headShakeDetected() {
-
-        if sessionInProgress{
-            timeoutTimer?.invalidate()
-            terminateSession(message: "Session Cancelled")
+    func speechRecognitionManagerTimedOut() {
+        if capturedLocalLanguageTranscript.isEmpty {
+            stopAudio()
+            terminateSession(message: "Speech Capture Timed Out")
         }
-    }
-    
-    @objc func timeoutTimerFired() {
-        timeoutTimer?.invalidate()
-        terminateSession()
-    }
-    
-    func terminateSession(message: String = "Session Timed Out") {
-        if AudioManager.sharedInstance.isRecording {
-            _ = AudioManager.sharedInstance.stop()
+        else {
+            prepareAndStartTranslate()
         }
-        if SpeechRecognitionManager.sharedInstance.isStreaming(){
-            SpeechRecognitionManager.sharedInstance.stopStreaming()
-        }
-        sessionInProgress = false
-        SwiftSpinner.show(duration: 1.3, title: message)
+        
         
     }
     
-    private func resetTimeoutTimer() {
-        timeoutTimer?.invalidate()
-        timeoutTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(timeoutTimerFired), userInfo: nil, repeats: false)
+    func terminateSession(message: String = "Session Timed Out") {
+//        if AudioManager.sharedInstance.isRecording {
+//            _ = AudioManager.sharedInstance.stop()
+//        }
+//        if SpeechRecognitionManager.sharedInstance.isStreaming(){
+//            SpeechRecognitionManager.sharedInstance.stopStreaming()
+//        }
+        sessionInProgress = false
+        SwiftSpinner.show(duration: 1.3, title: message)
         
     }
     
