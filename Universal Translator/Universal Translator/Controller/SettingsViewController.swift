@@ -91,7 +91,13 @@ class SettingsViewController: UITableViewController {
         let value = gesturesEnableSwitch.isOn
         
         _ = GlobalSettingsManager.sharedInstance.setGet(setGetStatus: .set, setting: .gestureEnable, to: value)
-        BoseWearableDeviceManager.sharedInstance.searchForDevice()
+        if value {
+            BoseWearableDeviceManager.sharedInstance.searchForDevice()
+        }
+        else {
+            BoseWearableDeviceManager.sharedInstance.closeSession()
+        }
+        
     }
     
     @IBAction func detectLangTextSwitchToggled(_ sender: Any) {

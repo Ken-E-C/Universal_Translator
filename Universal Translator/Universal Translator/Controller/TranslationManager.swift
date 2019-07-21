@@ -66,7 +66,7 @@ class TranslationManager: NSObject {
     
     var timeoutTimer: Timer?
     var isRunning = false
-    var timeoutCallback: ((String)->(Void))?
+    var timeoutCallback: ((String, Bool)->(Void))?
     
     private func makeRequest(usingTranslationAPI api: TranslationAPI, urlParams: [String: String], completion: @escaping (_ results: Data?) -> Void) {
         isRunning = true
@@ -215,7 +215,7 @@ class TranslationManager: NSObject {
         guard let verifiedTimeoutCallback = timeoutCallback else {
             fatalError("No timeout callback was initialized in the SpeechRecognitionManager")
         }
-        verifiedTimeoutCallback("Translation Operation Timed out")
+        verifiedTimeoutCallback("Translation Operation Timed out", true)
     }
 }
 

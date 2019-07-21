@@ -30,7 +30,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     @IBOutlet weak var translatedTextView: UITextView!
     
     //@IBOutlet weak var translatedTextMacroView: UIView!
-    @IBOutlet weak var targetLanguageMacroView: UIView!
+    //@IBOutlet weak var targetLanguageMacroView: UIView!
     
     var languagePicker = UIPickerView()
     var voicePicker = UIPickerView()
@@ -58,6 +58,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         // Do any additional setup after loading the view.
         
         BoseWearableDeviceManager.sharedInstance.delegate = self
+        BoseWearableDeviceManager.sharedInstance.sendToVC = presentAlert
         
         languagePicker.delegate = self
         languagePicker.dataSource = self
@@ -167,19 +168,19 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         translatedTextView.layer.shadowOpacity = defaultShadowOpacity
         translatedTextView.layer.shadowRadius = defaultShadowRadius
         
-        targetLanguageMacroView.layer.cornerRadius = 27
-        targetLanguageMacroView.layer.shadowColor = defaultShadowColor
-        targetLanguageMacroView.layer.masksToBounds = defaultMaskToBounds
-        targetLanguageMacroView.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
-        targetLanguageMacroView.layer.shadowOpacity = defaultShadowOpacity
-        targetLanguageMacroView.layer.shadowRadius = defaultShadowRadius
+//        targetLanguageMacroView.layer.cornerRadius = 27
+//        targetLanguageMacroView.layer.shadowColor = defaultShadowColor
+//        targetLanguageMacroView.layer.masksToBounds = defaultMaskToBounds
+//        targetLanguageMacroView.layer.shadowOffset = CGSize(width: 0.0, height: 3.0)
+//        targetLanguageMacroView.layer.shadowOpacity = defaultShadowOpacity
+//        targetLanguageMacroView.layer.shadowRadius = defaultShadowRadius
         
-        targetLanguageTextField.layer.cornerRadius = 15
-        targetLanguageTextField.layer.shadowColor = defaultShadowColor
-        targetLanguageTextField.layer.masksToBounds = defaultMaskToBounds
-        targetLanguageTextField.layer.shadowOffset = defaultShadowOffset
-        targetLanguageTextField.layer.shadowOpacity = defaultShadowOpacity
-        targetLanguageTextField.layer.shadowRadius = defaultShadowRadius
+//        targetLanguageTextField.layer.cornerRadius = 15
+//        targetLanguageTextField.layer.shadowColor = defaultShadowColor
+//        targetLanguageTextField.layer.masksToBounds = defaultMaskToBounds
+//        targetLanguageTextField.layer.shadowOffset = defaultShadowOffset
+//        targetLanguageTextField.layer.shadowOpacity = defaultShadowOpacity
+//        targetLanguageTextField.layer.shadowRadius = defaultShadowRadius
         
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(TranslationCenterViewController.dismissKeyboard))
@@ -192,7 +193,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         if TranslationManager.sharedInstance.supportedLanguages.isEmpty {
             fetchSupportedLanguagesList()
         }
-        
+        setTargetLang()
     }
     override func viewDidAppear(_ animated: Bool) {
         //MARK: Request necessary permissions
@@ -220,6 +221,9 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             LanguageManager.sharedInstance.isFirstRuntime = false
             SwiftSpinner.show("Inferring Local Language")
             LanguageManager.sharedInstance.inferLanguage()
+        }
+        else if BoseWearableDeviceManager.sharedInstance.activeWearableSession == nil && gesturesEnabled {
+            BoseWearableDeviceManager.sharedInstance.searchForDevice()
         }
         
     }
@@ -258,11 +262,8 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             present(languageNotinferredAlert, animated: true)
         }
         else {
-            let selectedLang = LanguageManager.sharedInstance.selectedTargetLang
-            localLanguageTextField.text = selectedLang.languageName
-            VoiceManager.sharedInstance.setVoiceTag(languageCode: selectedLang.bcp47Tag!)
-            VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
             //outputVoiceTextField.text = VoiceManager.sharedInstance.selectedVoice?.voiceName
+            
             
             if BoseWearableDeviceManager.sharedInstance.activeWearableSession == nil && gesturesEnabled {
                 BoseWearableDeviceManager.sharedInstance.searchForDevice()
@@ -270,7 +271,13 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             
         }
     }
-    
+    func setTargetLang() {
+        let selectedLang = LanguageManager.sharedInstance.selectedTargetLang
+        localLanguageTextField.text = selectedLang.languageName
+        VoiceManager.sharedInstance.setVoiceTag(languageCode: selectedLang.bcp47Tag!)
+        VoiceManager.sharedInstance.setRegionalTags(languageCode: selectedLang.bcp47Tag!)
+
+    }
     
     //MARK: LanguagePicker Stuff
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -371,7 +378,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
     
     
     private func startTextBasedTranslation(capturedText: String) {
-        if areLanguagesTheSame() {
+        if !isLanguageSelectionValid() {
             return
         }
         SwiftSpinner.show("Starting Translation")
@@ -425,20 +432,35 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         }
     }
     
-    func areLanguagesTheSame() -> Bool {
-        let localLang = LanguageManager.sharedInstance.selectedLocalLang.languageTag
-        let targetLang = LanguageManager.sharedInstance.selectedTargetLang.languageTag
+    func isLanguageSelectionValid() -> Bool {
+        guard let localLang = LanguageManager.sharedInstance.selectedLocalLang.languageTag else {
+            let languageIdenticalAlert = UIAlertController(title: "Error with Local Language Selection", message: "Please set the local language you want to translate from", preferredStyle: .alert)
+            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            languageIdenticalAlert.addAction(okAction)
+            present(languageIdenticalAlert, animated: true, completion: nil)
+            terminateSession(displaySwiftSpinner: false)
+            return false
+        }
+        guard let targetLang = LanguageManager.sharedInstance.selectedTargetLang.languageTag else {
+            let languageIdenticalAlert = UIAlertController(title: "Error with Target Language Selection", message: "Please set the target language you want to translate to", preferredStyle: .alert)
+            let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            languageIdenticalAlert.addAction(okAction)
+            present(languageIdenticalAlert, animated: true, completion: nil)
+            terminateSession(displaySwiftSpinner: false)
+            return false
+        }
         if localLang == targetLang {
             let languageIdenticalAlert = UIAlertController(title: "Error with Selected Local and Target Language", message: "The target language and the local language cannot be the same. Please change either the local or target language", preferredStyle: .alert)
             let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
             languageIdenticalAlert.addAction(okAction)
             present(languageIdenticalAlert, animated: true, completion: nil)
-            terminateSession(message: "Error with Language Selection")
-            return true
+            terminateSession(displaySwiftSpinner: false)
+            return false
         }
         
-        return false
+        return true
     }
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
         return false
@@ -465,11 +487,13 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         if gesturesEnabled {
             if !sessionInProgress {
                 sessionInProgress = true
+                //check to see if device is connected
                 startAudioTranslation()
             }
             else {
                 SwiftSpinner.show("Processing Captured Speech")
-                _ = AudioManager.sharedInstance.stop()
+                //_ = AudioManager.sharedInstance.stop()
+                stopAudio()
             }
         }
     }
@@ -479,14 +503,15 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
         if sessionInProgress{
             //timeoutTimer?.invalidate()
             stopAudio()
-            terminateSession(message: "Session Cancelled")
+            terminateSession(message: "Session Cancelled", displaySwiftSpinner: true)
         }
     }
     //MARK: Speech to text post capture processing methods
     
     
     func startAudioTranslation() {
-        if areLanguagesTheSame(){
+        //check if languages are selected
+        if !isLanguageSelectionValid(){
             sessionInProgress = false
             return
         }
@@ -533,7 +558,7 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
                         print("Error with processing captured Speech: \(verifiedError.localizedDescription)")
                         if self.sessionInProgress {
                             self.sessionInProgress = false
-                            self.terminateSession()
+                            self.terminateSession(displaySwiftSpinner: true)
                         }
                     } else if let verifiedResponse = response {
                         var finished = false
@@ -567,21 +592,23 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
             SwiftSpinner.show("Translating speech")
         }
         startTranslation(capturedText: self.capturedLocalLanguageTranscript)
+        self.capturedLocalLanguageTranscript = ""
     }
     
     func speechRecognitionManagerTimedOut() {
-        if capturedLocalLanguageTranscript.isEmpty {
-            stopAudio()
-            terminateSession(message: "Speech Capture Timed Out")
-        }
-        else {
-            prepareAndStartTranslate()
-        }
         
-        
+        if sessionInProgress {
+            if capturedLocalLanguageTranscript.isEmpty {
+                stopAudio()
+                terminateSession(message: "Speech Capture Timed Out", displaySwiftSpinner: true)
+            }
+            else {
+                prepareAndStartTranslate()
+            }
+        }
     }
     
-    func terminateSession(message: String = "Session Timed Out") {
+    func terminateSession(message: String = "Session Timed Out", displaySwiftSpinner: Bool) {
 //        if AudioManager.sharedInstance.isRecording {
 //            _ = AudioManager.sharedInstance.stop()
 //        }
@@ -589,8 +616,18 @@ class TranslationCenterViewController: UIViewController, UITextViewDelegate, UIT
 //            SpeechRecognitionManager.sharedInstance.stopStreaming()
 //        }
         sessionInProgress = false
-        SwiftSpinner.show(duration: 1.3, title: message)
+        if displaySwiftSpinner{
+            SwiftSpinner.show(duration: 1.3, title: message)
+        }
+        else {
+            SwiftSpinner.hide()
+        }
         
+        
+    }
+    
+    func presentAlert(alert: UIAlertController) {
+        present(alert, animated: true, completion: nil)
     }
     
     //Bose Wearable Config Stuff

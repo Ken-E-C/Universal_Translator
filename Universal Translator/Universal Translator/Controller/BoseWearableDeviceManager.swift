@@ -27,6 +27,9 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
     
     var sensorDispatch = SensorDispatch(queue: .main)
     
+    var sendToVC: ((UIAlertController)->Void)?
+    
+    
     //MARK: Initial Configuration Stuff
     
     init() {
@@ -80,8 +83,9 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
         }
     }
     
-    
-    
+    func closeSession() {
+        activeWearableSession.close()
+    }
     
     //MARK: Bose Wearable Connection Events
     func sessionDidOpen(_ session: WearableDeviceSession) {
@@ -95,9 +99,28 @@ class BoseWearableDeviceManager: WearableDeviceSessionDelegate {
     func session(_ session: WearableDeviceSession, didFailToOpenWithError error: Error?) {
         print("Session failed with error \(String(describing: error))")
     }
+    
 
     func session(_ session: WearableDeviceSession, didCloseWithError error: Error?) {
         print("Session closed with error \(String(describing: error))")
+        
+        
+        let boseARConnectionDropout = UIAlertController(title: "Bose AR Connection Dropped out", message: "Would you like to try to reconnect", preferredStyle: .alert)
+        let yesAction = UIAlertAction(title: "Yes", style: .default) { (action) in
+            self.activeWearableSession = nil
+            self.searchForDevice()
+        }
+        let noAction = UIAlertAction(title: "No", style: .destructive) { (action) in
+            self.closeSession()
+        }
+        boseARConnectionDropout.addAction(yesAction)
+        boseARConnectionDropout.addAction(noAction)
+        //present(languageIdenticalAlert, animated: true, completion: nil)
+        if let verifiedSendToVC = sendToVC {
+            verifiedSendToVC(boseARConnectionDropout)
+        }
+        
+
     }
     
     private func listenForWearableDeviceEvents() {

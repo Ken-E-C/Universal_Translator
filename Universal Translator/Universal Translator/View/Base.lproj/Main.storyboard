@@ -355,68 +355,31 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                         <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                     </textView>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wLY-Ua-P9l">
-                                        <rect key="frame" x="-28" y="262" width="326" height="45"/>
-                                        <subviews>
-                                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Local Language" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="m7o-Lg-uww" userLabel="Language Input Text Field">
-                                                <rect key="frame" x="75" y="8" width="229" height="30"/>
-                                                <color key="backgroundColor" red="0.16078431369999999" green="0.20392156859999999" blue="0.38431372549999998" alpha="1" colorSpace="calibratedRGB"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="width" constant="229" id="2iT-TQ-SPM"/>
-                                                </constraints>
-                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                <textInputTraits key="textInputTraits"/>
-                                            </textField>
-                                        </subviews>
-                                        <color key="backgroundColor" red="0.38823529410000002" green="0.66666666669999997" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
+                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Local Language" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="m7o-Lg-uww" userLabel="Language Input Text Field">
+                                        <rect key="frame" x="19" y="243" width="229" height="30"/>
+                                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="0.0" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                         <constraints>
-                                            <constraint firstItem="m7o-Lg-uww" firstAttribute="leading" secondItem="wLY-Ua-P9l" secondAttribute="leading" constant="75" id="4Eb-Xo-4pl"/>
-                                            <constraint firstAttribute="width" constant="326" id="7W5-8a-slo"/>
-                                            <constraint firstAttribute="height" constant="45" id="WcG-TD-U45"/>
-                                            <constraint firstAttribute="bottom" secondItem="m7o-Lg-uww" secondAttribute="bottom" constant="7" id="awh-VN-Zkl"/>
-                                            <constraint firstItem="m7o-Lg-uww" firstAttribute="top" secondItem="wLY-Ua-P9l" secondAttribute="top" constant="8" id="pAT-d4-Qwg"/>
-                                            <constraint firstAttribute="trailing" secondItem="m7o-Lg-uww" secondAttribute="trailing" constant="22" id="wUw-fq-ecd"/>
+                                            <constraint firstAttribute="width" constant="229" id="amY-eo-Emr"/>
+                                            <constraint firstAttribute="height" constant="30" id="bi8-Lo-grF"/>
                                         </constraints>
-                                    </view>
+                                        <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
                                 </subviews>
                                 <color key="backgroundColor" red="0.99607843139999996" green="0.91372549020000005" blue="0.69803921570000005" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
-                                    <constraint firstItem="WPQ-X7-Gkj" firstAttribute="top" secondItem="82n-B8-ABD" secondAttribute="top" constant="58" id="G8f-UP-RaH"/>
-                                    <constraint firstAttribute="trailing" secondItem="WPQ-X7-Gkj" secondAttribute="trailing" constant="21" id="SdV-1r-gRi"/>
-                                    <constraint firstAttribute="bottom" secondItem="wLY-Ua-P9l" secondAttribute="bottom" constant="33" id="io8-qr-mXw"/>
-                                    <constraint firstItem="WPQ-X7-Gkj" firstAttribute="leading" secondItem="82n-B8-ABD" secondAttribute="leading" constant="19" id="qB6-t3-4qb"/>
-                                    <constraint firstItem="wLY-Ua-P9l" firstAttribute="leading" secondItem="82n-B8-ABD" secondAttribute="leading" constant="-28" id="uYE-91-pJb"/>
-                                    <constraint firstItem="wLY-Ua-P9l" firstAttribute="top" secondItem="WPQ-X7-Gkj" secondAttribute="bottom" constant="56" id="wcI-tb-q7U"/>
+                                    <constraint firstItem="m7o-Lg-uww" firstAttribute="top" secondItem="WPQ-X7-Gkj" secondAttribute="bottom" constant="37" id="Hxj-HE-Iqg"/>
+                                    <constraint firstAttribute="trailing" secondItem="WPQ-X7-Gkj" secondAttribute="trailing" constant="21" id="NZl-vL-bhh"/>
+                                    <constraint firstItem="WPQ-X7-Gkj" firstAttribute="leading" secondItem="82n-B8-ABD" secondAttribute="leading" constant="19" id="hhL-OI-5Hg"/>
+                                    <constraint firstItem="WPQ-X7-Gkj" firstAttribute="top" secondItem="82n-B8-ABD" secondAttribute="top" constant="58" id="sP4-FS-1YZ"/>
+                                    <constraint firstItem="m7o-Lg-uww" firstAttribute="leading" secondItem="82n-B8-ABD" secondAttribute="leading" constant="19" id="uek-ng-a3j"/>
+                                    <constraint firstAttribute="bottom" secondItem="m7o-Lg-uww" secondAttribute="bottom" constant="67" id="vvp-cx-OfK"/>
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rqE-Um-N6H" userLabel="Translated Language View">
                                 <rect key="frame" x="0.0" y="512" width="414" height="301"/>
                                 <subviews>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="m9u-in-LW2">
-                                        <rect key="frame" x="116" y="34" width="326" height="45"/>
-                                        <subviews>
-                                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="leading" contentVerticalAlignment="center" text="Translated Language" borderStyle="roundedRect" textAlignment="center" adjustsFontForContentSizeCategory="YES" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="7Fr-9a-8lT" userLabel="Language Input Text Field">
-                                                <rect key="frame" x="22" y="7" width="229" height="30"/>
-                                                <color key="backgroundColor" red="0.16078431369999999" green="0.20392156859999999" blue="0.38431372549999998" alpha="1" colorSpace="calibratedRGB"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="width" constant="229" id="2Uh-8H-OEE"/>
-                                                </constraints>
-                                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                <textInputTraits key="textInputTraits"/>
-                                            </textField>
-                                        </subviews>
-                                        <color key="backgroundColor" red="0.38823529410000002" green="0.66666666669999997" blue="0.73725490199999999" alpha="1" colorSpace="calibratedRGB"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="45" id="3L4-qS-UIQ"/>
-                                            <constraint firstAttribute="width" constant="326" id="5VZ-fc-kQJ"/>
-                                            <constraint firstItem="7Fr-9a-8lT" firstAttribute="leading" secondItem="m9u-in-LW2" secondAttribute="leading" constant="22" id="7lL-Fx-MTg"/>
-                                            <constraint firstAttribute="bottom" secondItem="7Fr-9a-8lT" secondAttribute="bottom" constant="8" id="eA5-h1-bzg"/>
-                                            <constraint firstAttribute="trailing" secondItem="7Fr-9a-8lT" secondAttribute="trailing" constant="75" id="nrv-hq-aJu"/>
-                                            <constraint firstItem="7Fr-9a-8lT" firstAttribute="top" secondItem="m9u-in-LW2" secondAttribute="top" constant="7" id="rl3-i2-9g3"/>
-                                        </constraints>
-                                    </view>
                                     <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="test" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="iwe-tN-Wk7">
                                         <rect key="frame" x="17" y="102" width="380" height="148"/>
                                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="0.30112906678082191" colorSpace="custom" customColorSpace="calibratedRGB"/>
@@ -424,15 +387,26 @@
                                         <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                         <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                                     </textView>
+                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="leading" contentVerticalAlignment="center" text="Translated Language" borderStyle="roundedRect" textAlignment="center" adjustsFontForContentSizeCategory="YES" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="7Fr-9a-8lT" userLabel="Language Input Text Field">
+                                        <rect key="frame" x="17" y="44" width="229" height="30"/>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="30" id="Ogs-gQ-og1"/>
+                                            <constraint firstAttribute="width" constant="229" id="WfN-y0-pCJ"/>
+                                        </constraints>
+                                        <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
                                 </subviews>
                                 <color key="backgroundColor" red="0.99607843139999996" green="0.91372549020000005" blue="0.69803921570000005" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
+                                    <constraint firstItem="7Fr-9a-8lT" firstAttribute="leading" secondItem="rqE-Um-N6H" secondAttribute="leading" constant="17" id="5rq-6D-2gi"/>
                                     <constraint firstAttribute="trailing" secondItem="iwe-tN-Wk7" secondAttribute="trailing" constant="17" id="CeS-u4-VdP"/>
-                                    <constraint firstItem="iwe-tN-Wk7" firstAttribute="top" secondItem="m9u-in-LW2" secondAttribute="bottom" constant="23" id="L7r-xy-JgP"/>
                                     <constraint firstAttribute="bottom" secondItem="iwe-tN-Wk7" secondAttribute="bottom" constant="51" id="LUd-1T-1m0"/>
+                                    <constraint firstItem="7Fr-9a-8lT" firstAttribute="top" secondItem="rqE-Um-N6H" secondAttribute="top" constant="44" id="RfO-f6-dtg"/>
                                     <constraint firstItem="iwe-tN-Wk7" firstAttribute="leading" secondItem="rqE-Um-N6H" secondAttribute="leading" constant="17" id="Y6O-v4-Gp5"/>
-                                    <constraint firstItem="m9u-in-LW2" firstAttribute="top" secondItem="rqE-Um-N6H" secondAttribute="top" constant="34" id="gRr-vB-QIF"/>
-                                    <constraint firstAttribute="trailing" secondItem="m9u-in-LW2" secondAttribute="trailing" constant="-28" id="oSP-v4-iug"/>
+                                    <constraint firstItem="iwe-tN-Wk7" firstAttribute="top" secondItem="7Fr-9a-8lT" secondAttribute="bottom" constant="28" id="sGB-uY-gMj"/>
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ayD-44-dIF" userLabel="Translation View">
@@ -509,7 +483,6 @@
                         <outlet property="localLanguageTextField" destination="m7o-Lg-uww" id="Ltc-lJ-wWa"/>
                         <outlet property="outputSelectorButton" destination="LbM-SE-Lsu" id="T5C-9Y-Z1y"/>
                         <outlet property="startTranslationStatusButton" destination="NhM-bt-PQq" id="9H5-DQ-u6n"/>
-                        <outlet property="targetLanguageMacroView" destination="m9u-in-LW2" id="cJl-yf-GYM"/>
                         <outlet property="targetLanguageTextField" destination="7Fr-9a-8lT" id="gNV-jf-M5r"/>
                         <outlet property="translatedTextView" destination="iwe-tN-Wk7" id="VjC-XI-1Xu"/>
                         <outlet property="translatorControlsSubview" destination="ayD-44-dIF" id="mqf-Hs-Fim"/>
